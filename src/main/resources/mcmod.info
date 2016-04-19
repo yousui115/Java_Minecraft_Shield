@@ -1,0 +1,16 @@
+[
+{
+  "modid": "shield",
+  "name": "Shield",
+  "description": "Shield Ability Up Mod",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["yousui115"],
+  "credits": ":-)",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
