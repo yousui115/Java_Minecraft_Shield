@@ -54,6 +54,7 @@ public class Shield
     {
         //■イベントの登録
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new AnvilEventHooks());
 
         //■エンチャントの生成・登録
         enchGuard = new EnchantmentGuard(Rarity.COMMON, EnumEnchantmentType.BREAKABLE, new EntityEquipmentSlot[] {EntityEquipmentSlot.MAINHAND});
@@ -306,16 +307,17 @@ public class Shield
     {
         if(event.getEntity() == null) return;
         IAttributeInstance attri = event.getEntity().getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
-        float amounts = 0;
 
-        for (AttributeModifier modi : attri.getModifiers())
+        if (attri != null && attri.hasModifier(guardWalkSpeedModifier))
         {
-            if (modi.equals(guardWalkSpeedModifier)) { continue; }
-            amounts += (float)modi.getAmount();
-        }
+            float amounts = 0;
 
-        if (attri.getModifier(guardWalkSpeedUUID) != null)
-        {
+            for (AttributeModifier modi : attri.getModifiers())
+            {
+                if (modi.equals(guardWalkSpeedModifier)) { continue; }
+                amounts += (float)modi.getAmount();
+            }
+
             //TODO: FOV値に上限があれば、それも考慮しないといけないと思います。
             event.setNewfov(1f + amounts * 0.5f);
         }
