@@ -43,7 +43,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 public class Shield
 {
     public static final String MODID = "shield";
-    public static final String VERSION = "v2";
+    public static final String VERSION = "M190_F1887_v3";
 
     public static Enchantment enchGuard;
 
@@ -278,23 +278,27 @@ public class Shield
     {
         EntityLivingBase living = event.getEntityLiving();
 
-        IAttributeInstance iattributeinstance = living.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
-
-        //■「ガード時歩行速度上昇」 の剥奪
-        iattributeinstance.removeModifier(guardWalkSpeedModifier);
-
-        //TODO 満腹度でスピードを調整しているが、エンチャント等にすべきか？
-        boolean canChangeSpeed = true;
+        //■プレイヤー以外はアイテムがアクティブでもスピードダウンしないっぽい
         if (living instanceof EntityPlayer)
         {
-            //■満腹度が15以下なら走れない(Max 20)
-            canChangeSpeed = ((EntityPlayer)living).getFoodStats().getFoodLevel() > 15 ? true : false;
-        }
+            IAttributeInstance iattributeinstance = living.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
 
-        if (canChangeSpeed && isGuard(living))
-        {
-            //■「ガード時歩行速度上昇」 の付与
-            iattributeinstance.applyModifier(guardWalkSpeedModifier);
+            //■「ガード時歩行速度上昇」 の剥奪
+            iattributeinstance.removeModifier(guardWalkSpeedModifier);
+
+            //TODO 満腹度でスピードを調整しているが、エンチャント等にすべきか？
+            boolean canChangeSpeed = true;
+            if (living instanceof EntityPlayer)
+            {
+                //■満腹度が15以下なら走れない(Max 20)
+                canChangeSpeed = ((EntityPlayer)living).getFoodStats().getFoodLevel() > 15 ? true : false;
+            }
+
+            if (canChangeSpeed && isGuard(living))
+            {
+                //■「ガード時歩行速度上昇」 の付与
+                iattributeinstance.applyModifier(guardWalkSpeedModifier);
+            }
         }
     }
 
@@ -400,6 +404,7 @@ public class Shield
     /**
      * ■ダメージソース がガード可能か否か (ブロック不可・ガード状態・ガード方向の調査)
      *   (ノックバック耐性の剥奪も処理している)
+     *   (EntityLivingBase.canBlockDamageSource() をパｋ参考にしました)
      * @param damageSourceIn
      * @param blocker
      * @return
