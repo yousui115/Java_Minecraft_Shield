@@ -43,7 +43,7 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 public class Shield
 {
     public static final String MODID = "shield";
-    public static final String VERSION = "M190_F1887_v3";
+    public static final String VERSION = "M1102_F2099_v1";
 
     public static Enchantment enchGuard;
 
@@ -59,17 +59,17 @@ public class Shield
         //■エンチャントの生成・登録
         enchGuard = new EnchantmentGuard(Rarity.COMMON, EnumEnchantmentType.BREAKABLE, new EntityEquipmentSlot[] {EntityEquipmentSlot.MAINHAND});
         enchGuard.setName("guard");
-        Enchantment.enchantmentRegistry.register(220, new ResourceLocation("guard"), enchGuard);
+        Enchantment.REGISTRY.register(220, new ResourceLocation("guard"), enchGuard);
 
         //■ガード性能１の盾は、レシピから作成できる
-        ItemStack shield = new ItemStack(Items.shield);
+        ItemStack shield = new ItemStack(Items.SHIELD);
         shield.addEnchantment(enchGuard, enchGuard.getMinLevel());
         GameRegistry.addRecipe(shield,
                 "#I#",
                 "###",
                 " # ",
-                '#', Blocks.planks,
-                'I', Blocks.iron_block
+                '#', Blocks.PLANKS,
+                'I', Blocks.IRON_BLOCK
         );
     }
 
@@ -91,19 +91,19 @@ public class Shield
 
             //■EntityLivingBase へ置換
             if (!(obj instanceof EntityLivingBase)) { continue; }
-            EntityLivingBase living = (EntityLivingBase)obj;
+            EntityLivingBase blocker = (EntityLivingBase)obj;
 
             //■ガード可能か否か(ガード不可攻撃、ガード方向の判定）
             DamageSource source = DamageSource.causeExplosionDamage(event.getExplosion());
-            if (!canBlockDamageSource(source, living)) { continue; }
+            if (!canBlockDamageSource(source, blocker, event.getExplosion().getPosition())) { continue; }
 
             //■
-            if (isJustGuard(living, true))
+            if (isJustGuard(blocker, true))
             {
                 //▼爆発をジャストガードした時の処理
 
             }
-            else if (isGuard(living) && getEnchGuardLevel_UsingItem(living) != 0)
+            else if (isGuard(blocker) && getEnchGuardLevel_UsingItem(blocker) != 0)
             {
                 //▼爆発をガード性能付きアイテムでガードした時の処理(ジャストガード除く)
 
@@ -116,13 +116,13 @@ public class Shield
                 float explSize = ObfuscationReflectionHelper.getPrivateValue(Explosion.class, expl, 8);
 
                 float f3 = explSize * 2.0f;
-                double d12 = living.getDistance(explosionX, explosionY, explosionZ) / (double)f3;
+                double d12 = blocker.getDistance(explosionX, explosionY, explosionZ) / (double)f3;
 
                 if (d12 <= 1.0D)
                 {
-                    double d5 = living.posX - explosionX;
-                    double d7 = living.posY + (double)living.getEyeHeight() - explosionY;
-                    double d9 = living.posZ - explosionZ;
+                    double d5 = blocker.posX - explosionX;
+                    double d7 = blocker.posY + (double)blocker.getEyeHeight() - explosionY;
+                    double d9 = blocker.posZ - explosionZ;
                     double d13 = (double)MathHelper.sqrt_double(d5 * d5 + d7 * d7 + d9 * d9);
 
                     if (d13 != 0.0D)
@@ -130,30 +130,47 @@ public class Shield
                         d5 = d5 / d13;
                         d7 = d7 / d13;
                         d9 = d9 / d13;
-                        double d14 = (double)living.worldObj.getBlockDensity(expl.getPosition(), living.getEntityBoundingBox());
+                        double d14 = (double)blocker.worldObj.getBlockDensity(expl.getPosition(), blocker.getEntityBoundingBox());
                         double d10 = (1.0D - d12) * d14;
 
                         //■ノックバックはあるが、上には吹っ飛ばない。
-                        if (getEnchGuardLevel_UsingItem(living) == 1)
+                        int level = getEnchGuardLevel_UsingItem(blocker);
+                        if (level == 1)
                         {
                             //■ノックバック耐性上昇 の剥奪
-                            IAttributeInstance iattributeinstance = living.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE);
+                            IAttributeInstance iattributeinstance = blocker.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE);
                             iattributeinstance.removeModifier(modifierGuardKnockback1);
                         }
 
-                        living.attackEntityFrom(DamageSource.causeExplosionDamage(expl), (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)f3 + 1.0D)));
+                        //■ダメージ処理
+                        float damage = (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)f3 + 1.0D));
+                        //TNT用
+                        if (level == 1)
+                        {
+                            //▼ガード性能１
+                            damage -= 2.0f;
+                        }
+                        else if (level == 2)
+                        {
+                            //▼ガード性能２
+                            damage -= 5.0f;
+                        }
+
+                        blocker.attackEntityFrom(DamageSource.causeExplosionDamage(expl), damage);
+
                         double d11 = 1.0D;
 
-                        if (living instanceof EntityLivingBase)
+                        //■エンチャント：爆発耐性 でのノックバック耐性
+                        if (blocker instanceof EntityLivingBase)
                         {
-                            d11 = EnchantmentProtection.func_92092_a((EntityLivingBase)living, d10);
+                            d11 = EnchantmentProtection.getBlastDamageReduction((EntityLivingBase)blocker, d10);
                         }
 
                         //■ノックバックはあるが、上には吹っ飛ばない。
-                        if (getEnchGuardLevel_UsingItem(living) == 1)
+                        if (level == 1)
                         {
-                            living.motionX += d5 * d11;
-                            living.motionZ += d9 * d11;
+                            blocker.motionX += d5 * d11;
+                            blocker.motionZ += d9 * d11;
                         }
                     }
                 }
@@ -210,7 +227,7 @@ public class Shield
         DamageSource source = event.getSource();
 
         //■ガード可能か否か(ガード不可攻撃、ガード状態、ガード方向の判定）
-        if (!canBlockDamageSource(source, defender)) { return; }
+        if (!canBlockDamageSource(source, defender, null)) { return; }
 
         //■ジャストガードしたか否か
         if (isJustGuard(defender, true))
@@ -242,22 +259,28 @@ public class Shield
         EntityLivingBase blocker = event.getEntityLiving();
 
         //■ガード可能か否か(ガード不可攻撃、ガード方向の判定）
-        if (!canBlockDamageSource(event.getSource(), blocker)) { return; }
+        if (!canBlockDamageSource(event.getSource(), blocker, null)) { return; }
 
         //■「使用中」アイテムの「ガード性能」レベルを取得
         int level = getEnchGuardLevel_UsingItem(blocker);
         float amount = event.getAmount();
 
         //TODO 要バランス調整
-        if (level == 1)
+        if (!event.getSource().isExplosion())
         {
-            //▼ガード性能１
-            amount -= 2.0f;
-        }
-        else if (level == 2)
-        {
-            //▼ガード性能２
-            amount -= 5.0f;
+            //爆発に関してはdoExplosionGuard()でダメージ軽減済み
+            //TODO 盾のダメージ軽減処理は乗算(*0.33F)の為、処理位置により結果が変わる。
+            //     本来はここで一括して処理したいが、いかんせん、それが出来る作りじゃないので妥協。
+            if (level == 1)
+            {
+                //▼ガード性能１
+                amount -= 2.0f;
+            }
+            else if (level == 2)
+            {
+                //▼ガード性能２
+                amount -= 5.0f;
+            }
         }
 
         event.setAmount(amount < 0 ? 0 : amount);
@@ -374,7 +397,7 @@ public class Shield
         //■音を鳴らす
         if (!living.worldObj.isRemote && isJG && isSound)
         {
-            living.worldObj.playSound(null, living.posX, living.posY, living.posZ, SoundEvents.entity_blaze_hurt, SoundCategory.HOSTILE, 1.0f, 1.5f);
+            living.worldObj.playSound(null, living.posX, living.posY, living.posZ, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 1.0f, 1.5f);
             //living.playSound(SoundEvents.block_anvil_break, 1.0f, 1.0f);
         }
 
@@ -409,11 +432,14 @@ public class Shield
      * @param blocker
      * @return
      */
-    public static boolean canBlockDamageSource(DamageSource damageSourceIn, EntityLivingBase blocker)
+    public static boolean canBlockDamageSource(DamageSource damageSourceIn, EntityLivingBase blocker, Vec3d vec3dIn)
     {
         if (!damageSourceIn.isUnblockable() && isGuard(blocker))
         {
             Vec3d vec3d = damageSourceIn.getDamageLocation();
+
+            //TNTの爆発をガード可能にする処理
+            if (vec3dIn != null) { vec3d = vec3dIn; }
 
             if (vec3d != null)
             {
@@ -421,6 +447,7 @@ public class Shield
                 Vec3d vec3d2 = vec3d.subtractReverse(new Vec3d(blocker.posX, blocker.posY, blocker.posZ)).normalize();
                 vec3d2 = new Vec3d(vec3d2.xCoord, 0.0D, vec3d2.zCoord);
 
+                //内積を使って、ガード範囲(180度)内か否かの算出を行う。
                 if (vec3d2.dotProduct(vec3d1) < 0.0D)
                 {
                     return true;
