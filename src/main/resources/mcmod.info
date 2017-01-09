@@ -2,7 +2,7 @@
 {
   "modid": "shield",
   "name": "Shield",
-  "description": "Shield Ability Up Mod",
+  "description": "Shield Ability Up.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
