@@ -28,13 +28,13 @@ public class EventFOVChange
 
         float f = event.getNewfov();
 
-        if (attri != null && attri.hasModifier(Util.guardWalkSpeedModifier))
+        if (attri != null && attri.hasModifier(Util.modifierGuardWalkSpeed))
         {
             double d0 = attri.getBaseValue();
 
             for (AttributeModifier modi0 : attri.getModifiersByOperation(0))
             {
-                if (!modi0.equals(Util.guardWalkSpeedModifier))
+                if (!modi0.equals(Util.modifierGuardWalkSpeed))
                 {
                     d0 += modi0.getAmount();
                 }
@@ -64,8 +64,6 @@ public class EventFOVChange
             {
                 f = 1.0F;
             }
-
-//            event.setNewfov(f);
         }
 
         //■パワーバッシュ溜め時のFOVの設定

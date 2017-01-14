@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import yousui115.shield.Util;
 
 
-public class EventGuardAction
+public class EventGuardState
 {
     /**
      * ■バッシュ中はダメージを通す。
@@ -33,17 +33,7 @@ public class EventGuardAction
 
         if (Util.isBashing(defender))
         {
-            try
-            {
-                ObfuscationReflectionHelper.setPrivateValue(DamageSource.class, source, true, 19);
-            }
-            catch(Exception e)
-            {
-                //■例外メッセージを表示
-                System.out.println("======================== ↓キリトリ↓ ========================");
-                System.out.println(e.getMessage());
-                System.out.println("======================== ↑キリトリ↑ ========================");
-            }
+            ObfuscationReflectionHelper.setPrivateValue(DamageSource.class, source, true, 19);
         }
     }
 
@@ -164,12 +154,16 @@ public class EventGuardAction
 //                            damage -= 5.0f;
 //                        }
 
-//                        blocker.attackEntityFrom(DamageSource.causeExplosionDamage(expl), damage);
                         Entity exploder = (Entity)ObfuscationReflectionHelper.getPrivateValue(Explosion.class, expl, 7);
-                        blocker.attackEntityFrom((new EntityDamageSource("explosion", exploder)).setDifficultyScaled().setExplosion(), damage);
-//                        Util.damageShield(blocker, damage);
+                        if (exploder != null)
+                        {
+                            blocker.attackEntityFrom((new EntityDamageSource("explosion", exploder)).setDifficultyScaled().setExplosion(), damage);
+                        }
+                        else
+                        {
+                            blocker.attackEntityFrom(DamageSource.causeExplosionDamage(expl), damage);
+                        }
 
-//                        double d11 = 1.0D;
                         double d11 = d10;
 
                         //■エンチャント：爆発耐性 でのノックバック耐性

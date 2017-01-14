@@ -8,8 +8,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import yousui115.shield.CommonProxy;
+import yousui115.shield.client.event.EventBash;
 import yousui115.shield.client.event.EventFOVChange;
-import yousui115.shield.client.event.EventShieldBash;
 
 
 //TODO 便利だからといって突っ込み過ぎ。
@@ -57,23 +57,6 @@ public class ClientProxy extends CommonProxy
         }
     }
 
-//    /**
-//     * ■バッシュ中か否か
-//     */
-//    @Override
-//    public boolean isBashing()
-//    {
-//        if (getThePlayer() != null
-//            && getThePlayer().isActiveItemStackBlocking()
-////            && isReleaseAttack()
-//            && getThePlayer().isSwingInProgress)
-//        {
-//            return true;
-//        }
-//
-//        return false;
-//    }
-
     /**
      * ■入力時間に応じたバッシュパワーの取得
      * @return
@@ -108,7 +91,7 @@ public class ClientProxy extends CommonProxy
         super.registerEvent();
 
         //■クライアントイベントの登録
-        MinecraftForge.EVENT_BUS.register(new EventShieldBash());
+        MinecraftForge.EVENT_BUS.register(new EventBash());
         MinecraftForge.EVENT_BUS.register(new EventFOVChange());
     }
 

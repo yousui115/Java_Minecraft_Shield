@@ -4,7 +4,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
-import yousui115.shield.event.EventGuardAction;
+import yousui115.shield.event.EventGuardState;
 import yousui115.shield.event.EventGuardMove;
 
 public class CommonProxy
@@ -34,7 +34,7 @@ public class CommonProxy
     public void registerEvent()
     {
         MinecraftForge.EVENT_BUS.register(new EventGuardMove());
-        MinecraftForge.EVENT_BUS.register(new EventGuardAction());
+        MinecraftForge.EVENT_BUS.register(new EventGuardState());
     }
 
     /* ================================ getter ================================ */

@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
-public class MessageBashTarget implements IMessage
+public class MsgBash implements IMessage
 {
     private int targetID;
     private int power;
@@ -13,12 +13,12 @@ public class MessageBashTarget implements IMessage
     /**
      * ■コンストラクタ(必須！)
      */
-    public MessageBashTarget(){}
+    public MsgBash(){}
 
     /**
      * ■コンストラクタ
      */
-    public MessageBashTarget(Entity entityIn, int powerIn, int amountIn)
+    public MsgBash(Entity entityIn, int powerIn, int amountIn)
     {
         this.targetID = entityIn.getEntityId();
         this.power = powerIn;
