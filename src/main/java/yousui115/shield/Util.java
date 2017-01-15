@@ -173,10 +173,10 @@ public class Util
             int i = 1 + MathHelper.floor_float(damage);
             living.getActiveItemStack().damageItem(i, living);
 
-            if (living.getActiveItemStack().func_190926_b())
+
+            if (living.getActiveItemStack().stackSize <= 0)
             {
                 EnumHand enumhand = living.getActiveHand();
-
                 if (living instanceof EntityPlayer)
                 {
                     net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem((EntityPlayer)living, living.getActiveItemStack(), enumhand);
@@ -184,13 +184,14 @@ public class Util
 
                 if (enumhand == EnumHand.MAIN_HAND)
                 {
-                    living.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, ItemStack.field_190927_a);
+                    living.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, (ItemStack)null);
                 }
                 else
                 {
-                    living.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, ItemStack.field_190927_a);
+                    living.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, (ItemStack)null);
                 }
 
+//                living.activeItemStack = null;
                 living.resetActiveHand();
                 living.playSound(SoundEvents.ITEM_SHIELD_BREAK, 0.8F, 0.8F + living.worldObj.rand.nextFloat() * 0.4F);
             }
