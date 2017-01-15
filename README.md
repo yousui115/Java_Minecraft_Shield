@@ -4,8 +4,8 @@
 https://www.dropbox.com/s/nd0uhos43xxom01/shield_M1102_F2185_v2.jar?dl=0<br>
 
 ##■動作環境<br>
-Minecraft 1.11.0<br>
-Forge 2189<br>
+Minecraft 1.10.2<br>
+Forge 2185<br>
 
 ##■はじめに<br>
 * バニラの盾の性能を変更するModです。
