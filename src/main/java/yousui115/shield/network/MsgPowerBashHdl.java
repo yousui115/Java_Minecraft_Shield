@@ -67,7 +67,6 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
             if (radian < Math.PI / 6d)
             {
                 target.attackEntityFrom(DamageSource.causePlayerDamage(player), 1);
-                player.getActiveItemStack().damageItem(msg.getPower(), player);
 
                 if (target instanceof EntityLiving)
                 {
@@ -80,8 +79,12 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
             }
         }
 
+        //■敵にHitした
         if (isSound)
         {
+            //■盾にダメージ
+            player.getActiveItemStack().damageItem(msg.getPower(), player);
+            //■パワーバッシュ音
             player.worldObj.playSound((EntityPlayer)null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_BLAZE_HURT, player.getSoundCategory(), 1.0F, 1.0F);
         }
 
