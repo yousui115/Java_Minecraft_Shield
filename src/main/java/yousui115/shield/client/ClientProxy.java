@@ -26,8 +26,10 @@ public class ClientProxy extends CommonProxy
      * @param isPush
      */
     @Override
-    public void addPushAttack(boolean isPush)
+    public void addPushAttack()
     {
+        boolean isPush = this.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
+
         for (int idx = isPushAttack.length - 2; idx >= 0; idx--)
         {
             isPushAttack[idx + 1] = isPushAttack[idx];
@@ -96,6 +98,10 @@ public class ClientProxy extends CommonProxy
     }
 
     /* ================================ その他 ================================ */
+    @Nullable
+    @Override
+    public Minecraft getMinecraft() { return Minecraft.getMinecraft(); }
+
     @Nullable
     @Override
     public EntityPlayer getThePlayer() { return ((Minecraft)Minecraft.getMinecraft()).thePlayer; }
