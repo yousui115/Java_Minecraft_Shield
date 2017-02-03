@@ -1,7 +1,7 @@
 #盾
 
-##■DL (M1110_F2189_v3)<br>
-https://www.dropbox.com/s/e8grp27z9s5wtgw/shield_M1110_F2189_v3.jar?dl=0<br>
+##■DL (M1110_F2189_v4)<br>
+https://www.dropbox.com/s/jd8d7nc57yn31zp/shield_M1110_F2189_v4.jar?dl=0<br>
 
 ##■動作環境<br>
 Minecraft 1.11.0<br>
@@ -41,7 +41,7 @@ Forge 2189<br>
 　　　　　　　　　　耐久値を2消費する。<br>
 <br>
 ##■その他<br>
-スケさんの弓をガードした場合、一瞬加速しますが、現状仕様となっています。<br>
+盾のダメージ値が増減した時、一瞬加速しますが、現状仕様となっています。<br>
 
 バッシュによる行動不能状態は、AI処理へ働きかけている為、<br>
 バニラAIを使用していない敵は、平気な顔で近づいてきます。ご注意。<br>
