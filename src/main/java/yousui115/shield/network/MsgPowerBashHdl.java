@@ -3,6 +3,7 @@ package yousui115.shield.network;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.passive.EntityBat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.DamageSource;
@@ -16,6 +17,7 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
 {
     /**
      * ■Client -> Server
+     *   TODO 要リファクタリング
      */
     @Override
     public IMessage onMessage(MsgPowerBash msg, MessageContext ctx)
@@ -31,7 +33,10 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
             ((EntityLiving)target).knockBack(player, 0.4F, (double)MathHelper.sin(player.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(player.rotationYaw * 0.017453292F)));
             Util.tameAIDonmov(((EntityLiving)target), msg.getPower());
         }
-        target.attackEntityFrom(DamageSource.causePlayerDamage(player), msg.getAmount());
+
+        int damage = msg.getAmount();
+        if (target instanceof EntityBat) { damage *= 1000; } // コウモリなんてふぁいっきらいだ！ばーか！
+        target.attackEntityFrom(DamageSource.causePlayerDamage(player), damage);
 
 
         if (!(target instanceof EntityLivingBase)) { return null; }
@@ -40,8 +45,10 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
         {
             if (entitylivingbase != player && entitylivingbase != targetEntity && !player.isOnSameTeam(entitylivingbase) && player.getDistanceSqToEntity(entitylivingbase) < 9.0D)
             {
+                damage = 1;
                 entitylivingbase.knockBack(player, 0.4F, (double)MathHelper.sin(player.rotationYaw * 0.017453292F), (double)(-MathHelper.cos(player.rotationYaw * 0.017453292F)));
-                entitylivingbase.attackEntityFrom(DamageSource.causePlayerDamage(player), 1.0F);
+                if (entitylivingbase instanceof EntityBat) { damage *= 1000; } // コウモリなんてふぁいっきらいだ！ばーか！
+                entitylivingbase.attackEntityFrom(DamageSource.causePlayerDamage(player), damage);
 
                 if (entitylivingbase instanceof EntityLiving)
                 {

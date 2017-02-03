@@ -2,6 +2,8 @@ package yousui115.shield;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAITasks;
@@ -16,6 +18,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import yousui115.shield.ai.EntityAIDonMov;
 
@@ -49,7 +52,7 @@ public class Util
         //■現在使ってるアイテムを取得
         ItemStack activeStack = living.getActiveItemStack();
 
-        if (activeStack != null && living.isHandActive())
+        if (!activeStack.func_190926_b() && living.isHandActive())
         {
             //■アイテムを持っていて、使用中である。
             Item activeItem = activeStack.getItem();
@@ -218,4 +221,53 @@ public class Util
             target.tasks.addTask(0, ai);
         }
     }
+
+    /**
+     * ■Entity.rayTrace参考
+     * @param living
+     * @param partialTick
+     * @return
+     */
+    @Nullable
+    public static RayTraceResult rayTrace(EntityLivingBase living, double range, float partialTicks, float offsetYaw)
+    {
+        //■プレイヤー位置
+        Vec3d posLivEye = living.getPositionEyes(partialTicks);
+        //■プレイヤー視線
+        Vec3d vecLivLook = getLook(living, partialTicks, offsetYaw);
+        //■プレイヤー視線(レンジ)
+        Vec3d posLivRange = posLivEye.addVector(vecLivLook.xCoord * range, vecLivLook.yCoord * range, vecLivLook.zCoord * range);
+        //■草とかに攻撃が吸われないように。
+        return living.worldObj.rayTraceBlocks(posLivEye, posLivRange, false, true, true);
+    }
+
+    /**
+     * ■EntityLivingBaseをパｋ参考。
+     * @param living
+     * @param partialTicks
+     * @return
+     */
+    public static Vec3d getLook(EntityLivingBase living, float partialTicks, float offsetYaw)
+    {
+        if (partialTicks == 1.0F)
+        {
+            return getVectorForRotation(living.rotationPitch, living.rotationYawHead + offsetYaw);
+        }
+        else
+        {
+            float f = living.prevRotationPitch + (living.rotationPitch - living.prevRotationPitch) * partialTicks;
+            float f1 = living.prevRotationYawHead + (living.rotationYawHead - living.prevRotationYawHead) * partialTicks;
+            return getVectorForRotation(f, f1 + offsetYaw);
+        }
+    }
+
+    private static final Vec3d getVectorForRotation(float pitch, float yaw)
+    {
+        float f = MathHelper.cos(-yaw * 0.017453292F - (float)Math.PI);
+        float f1 = MathHelper.sin(-yaw * 0.017453292F - (float)Math.PI);
+        float f2 = -MathHelper.cos(-pitch * 0.017453292F);
+        float f3 = MathHelper.sin(-pitch * 0.017453292F);
+        return new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
+    }
+
 }

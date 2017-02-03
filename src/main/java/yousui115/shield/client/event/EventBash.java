@@ -9,14 +9,10 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EntitySelectors;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Timer;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
@@ -86,14 +82,14 @@ public class EventBash
                     Timer timer = (Timer)ObfuscationReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), 20);
                     partialTicks = timer.renderPartialTicks;
 
-                    //■クロスヘア上のレンジ
-                    double range = (double)Minecraft.getMinecraft().playerController.getBlockReachDistance();
+                    //■攻撃が届く範囲
+                    double rangePlayer = (double)Minecraft.getMinecraft().playerController.getBlockReachDistance();
 
-                    //■TODO レンジ長を送り、サーバ側でかき集めて一括処理するべきか。悩ましい。
-                    //■レンジ範囲内のEntityをかき集める。
+                    //■TODO レンジを送り、サーバ側でかき集めて一括処理するべきか。悩ましい。
+                    //■範囲内のEntityをかき集める。(どの方向を向いてても良い様にexpandXyz(range))
                     List<Entity> entities = player.worldObj.getEntitiesInAABBexcluding(
                                                 player,
-                                                player.getEntityBoundingBox().expand(range, range, range),
+                                                player.getEntityBoundingBox().expandXyz(rangePlayer),
                                                 Predicates.and(EntitySelectors.NOT_SPECTATING,
                                                 new Predicate<Entity>()
                                                 {
@@ -107,88 +103,118 @@ public class EventBash
                     float offset = 35;
                     for (int idx = 0; idx < 3; idx++)
                     {
+                        //■基本レンジ
+                        rangePlayer = (double)Minecraft.getMinecraft().playerController.getBlockReachDistance();
+
                         //■レイトレース(Y軸回転)補正
                         float offsetYaw = (idx - 1) * offset;
 
                         //■レイトレース(草ブロック等は無視するように設定)
-                        RayTraceResult result = rayTrace(player, range, 1.0F, offsetYaw);
+                        RayTraceResult resultBlock = Util.rayTrace(player, rangePlayer, 1.0F, offsetYaw);
 
                         //■視点
-                        Vec3d posEye = player.getPositionEyes(partialTicks);
+                        Vec3d posPlayerEye = player.getPositionEyes(partialTicks);
 
                         //■ブロックがあれば、ブロックまでの距離を取得
-                        if (result != null && result.typeOfHit == RayTraceResult.Type.BLOCK)
+                        if (resultBlock != null && resultBlock.typeOfHit == RayTraceResult.Type.BLOCK)
                         {
-                            range = result.hitVec.distanceTo(posEye);
+                            rangePlayer = resultBlock.hitVec.distanceTo(posPlayerEye);
                         }
 
-                        //■視線
-                        Vec3d vecLook = getLook(player, 1.0F, offsetYaw);
-                        //■視線(レンジ)
-                        Vec3d vecRange = posEye.addVector(vecLook.xCoord * range, vecLook.yCoord * range, vecLook.zCoord * range);
+                        //■レンジ(クロスヘア上のレンジ長最大点)
+//                        Vec3d posPlayerRange = getLook(player, 1.0F, offsetYaw).scale(rangePlayer);
+                        Vec3d posPlayerRange = posPlayerEye.add(Util.getLook(player, 1.0F, offsetYaw).scale(rangePlayer));
 
+//                        Vec3d vec3d1 = entity.getLook(1.0F);
+//                        Vec3d vec3d2 = vec3d.addVector(vec3d1.xCoord * d0, vec3d1.yCoord * d0, vec3d1.zCoord * d0);
 
-                        double d2 = range;
-                        Entity pointedEntity = null;
-                        Vec3d vec3d3 = null;
+                        //■最寄のEntityまでの距離
+                        double rangeNear = rangePlayer;
+                        //■最寄のEntity
+                        Entity target = null;
+                        //■最寄のEntityの位置情報
+                        Vec3d posTarget = null;
+
+                        //■前にかき集めたEntityリストから対象をピックアップする
                         for (int j = 0; j < entities.size(); ++j)
                         {
-                            Entity entity1 = (Entity)entities.get(j);
-                            double expand = 0.5;//(double)entity1.getCollisionBorderSize();
-                            AxisAlignedBB axisalignedbb = entity1.getEntityBoundingBox().expandXyz(expand);
-                            RayTraceResult raytraceresult = axisalignedbb.calculateIntercept(posEye, vecRange);
+                            //■リストからEntityを取得
+                            //TODO:被害を受けるかどうかはまだ判らないからsuspect?
+                            Entity victim = (Entity)entities.get(j);    //victim = 被害者(バッシュの)
 
-                            if (axisalignedbb.isVecInside(posEye))
+                            //■Entityの当たり判定を拡張
+                            double expand = 0.5;//(double)entity1.getCollisionBorderSize();
+                            AxisAlignedBB aabbVictim = victim.getEntityBoundingBox().expandXyz(expand);
+
+                            //■視線と上記当たり判定が交差するか否か(intercept = 遮る)
+                            RayTraceResult resultVictim = aabbVictim.calculateIntercept(posPlayerEye, posPlayerRange);
+
+                            //▼被害者の中に居る
+                            if (aabbVictim.isVecInside(posPlayerEye))
                             {
-                                if (d2 >= 0.0D)
+                                //■プレイヤーと密着してる奴が最寄
+                                if (rangeNear >= 0.0D)
                                 {
-                                    pointedEntity = entity1;
-                                    vec3d3 = raytraceresult == null ? posEye : raytraceresult.hitVec;
-                                    d2 = 0.0D;
+                                    target = victim;
+                                    posTarget = resultVictim == null ? posPlayerEye : resultVictim.hitVec;
+                                    rangeNear = 0.0D;
                                 }
                             }
-                            else if (raytraceresult != null)
+                            //▼視線上に居る
+                            else if (resultVictim != null)
                             {
-                                double d3 = posEye.distanceTo(raytraceresult.hitVec);
+                                //■プレイヤーと被害者との距離
+                                double distancePV = posPlayerEye.distanceTo(resultVictim.hitVec);
 
-                                if (d3 < d2 || d2 == 0.0D)
+                                //■「これまでの最寄Entityより近い」 もしくは 「最寄Entityとプレイヤーが密着」
+                                //TODO:プレイヤーと密着してるEntityの処理後、クロスヘア上のEntityの処理を行うと入ってしまうのでは？
+                                //     v4pre:独自で修正
+//                                if (distancePV < rangeNear || rangeNear == 0.0D)
+
+                                //■「これまでの最寄Entityより近い」
+                                if (distancePV < rangeNear)
                                 {
-                                    if (entity1.getLowestRidingEntity() == player.getLowestRidingEntity() && !player.canRiderInteract())
+                                    //▼victimとplayerの最下層乗り物Entityが同一
+                                    //  (乗って無いなら自分自身が帰る)
+                                    //  (例えば、victimが馬で、playerがその馬に乗ってるなら、馬=馬でtrueが帰る)
+                                    if (victim.isRidingSameEntity(player) && !player.canRiderInteract())
                                     {
-                                        if (d2 == 0.0D)
-                                        {
-                                            pointedEntity = entity1;
-                                            vec3d3 = raytraceresult.hitVec;
-                                        }
+                                        //■乗ってる馬やボートにバッシュ当てたくないので。
+//                                        if (rangeNear == 0.0D)
+//                                        {
+//                                            target = victim;
+//                                            posTarget = resultVictim.hitVec;
+//                                        }
                                     }
                                     else
                                     {
-                                        pointedEntity = entity1;
-                                        vec3d3 = raytraceresult.hitVec;
-                                        d2 = d3;
+                                        target = victim;
+                                        posTarget = resultVictim.hitVec;
+                                        rangeNear = distancePV;
                                     }
                                 }
                             }
                         }
 
-                        RayTraceResult objectMouseOver = null;
-                        if (pointedEntity != null
-//                            && flag
-                            && posEye.distanceTo(vec3d3) > 3.0D)
+//                        RayTraceResult objectMouseOver = null;
+                        if (target != null && posPlayerEye.distanceTo(posTarget) > 3.0D)
                         {
-                            pointedEntity = null;
-                            objectMouseOver = new RayTraceResult(RayTraceResult.Type.MISS, vec3d3, (EnumFacing)null, new BlockPos(vec3d3));
+                            target = null;
+//                            objectMouseOver = new RayTraceResult(RayTraceResult.Type.MISS, posTarget, (EnumFacing)null, new BlockPos(posTarget));
                         }
 
-                        if (pointedEntity != null && (d2 < range || objectMouseOver == null))
-                        {
-                            objectMouseOver = new RayTraceResult(pointedEntity, vec3d3);
+                        if (target != null) { entities.remove(target); }
+
+
+//                        if (target != null && (rangeNear < rangePlayer || objectMouseOver == null))
+//                        {
+//                            objectMouseOver = new RayTraceResult(target, posTarget);
 
 //                            if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame)
 //                            {
 //                                this.mc.pointedEntity = this.pointedEntity;
 //                            }
-                        }
+//                        }
 
 
 
@@ -197,9 +223,9 @@ public class EventBash
 
 
                         //■パケット送信
-                        if (pointedEntity != null)
+                        if (target != null)
                         {
-                            PacketHandler.INSTANCE.sendToServer(new MsgPowerBash(range, Shield.proxy.getPower(), 1, pointedEntity.getEntityId()));
+                            PacketHandler.INSTANCE.sendToServer(new MsgPowerBash(rangePlayer, Shield.proxy.getPower(), 1, target.getEntityId()));
                         }
                     }
                 }
@@ -210,54 +236,6 @@ public class EventBash
         {
             Shield.proxy.resetAttack();
         }
-    }
-
-    /**
-     * ■Entity.rayTrace参考
-     * @param living
-     * @param partialTick
-     * @return
-     */
-    @Nullable
-    private static RayTraceResult rayTrace(EntityLivingBase living, double range, float partialTicks, float offsetYaw)
-    {
-        //■プレイヤー位置
-        Vec3d posLivEye = living.getPositionEyes(partialTicks);
-        //■プレイヤー視線
-        Vec3d vecLivLook = getLook(living, partialTicks, offsetYaw);
-        //■プレイヤー視線(レンジ)
-        Vec3d vecLivRange = posLivEye.addVector(vecLivLook.xCoord * range, vecLivLook.yCoord * range, vecLivLook.zCoord * range);
-        //■草とかに攻撃が吸われないように。
-        return living.worldObj.rayTraceBlocks(posLivEye, vecLivRange, false, true, true);
-    }
-
-    /**
-     * ■EntityLivingBaseをパｋ参考。
-     * @param living
-     * @param partialTicks
-     * @return
-     */
-    protected static Vec3d getLook(EntityLivingBase living, float partialTicks, float offsetYaw)
-    {
-        if (partialTicks == 1.0F)
-        {
-            return getVectorForRotation(living.rotationPitch, living.rotationYawHead + offsetYaw);
-        }
-        else
-        {
-            float f = living.prevRotationPitch + (living.rotationPitch - living.prevRotationPitch) * partialTicks;
-            float f1 = living.prevRotationYawHead + (living.rotationYawHead - living.prevRotationYawHead) * partialTicks;
-            return getVectorForRotation(f, f1 + offsetYaw);
-        }
-    }
-
-    protected static final Vec3d getVectorForRotation(float pitch, float yaw)
-    {
-        float f = MathHelper.cos(-yaw * 0.017453292F - (float)Math.PI);
-        float f1 = MathHelper.sin(-yaw * 0.017453292F - (float)Math.PI);
-        float f2 = -MathHelper.cos(-pitch * 0.017453292F);
-        float f3 = MathHelper.sin(-pitch * 0.017453292F);
-        return new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
     }
 
 
@@ -271,7 +249,7 @@ public class EventBash
         //Minecraft.getMinecraft().getItemRenderer().
         EntityPlayer player = Shield.proxy.getThePlayer();
         if (player == null) { return; }
-        IAttributeInstance attri = player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
+//        IAttributeInstance attri = player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
 
 //        if (player.getActiveHand() == event.getHand()
 //            && attri.hasModifier(Util.guardSprintSpeedModifier))
