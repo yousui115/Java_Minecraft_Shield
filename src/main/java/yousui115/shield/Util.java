@@ -43,7 +43,8 @@ public class Util
 //    public static final AttributeModifier modifierGuardKnockback1 = (new AttributeModifier(UUID_GuardKnockback1, "Guard Knockback Resistance 1", 1.0d, 0)).setSaved(false);
 
     /**
-     * ■ガード中 か否か(0Tick～7200Tick)
+     * ■ガード中 か否か(0Tick～7200Tick)<br>
+     *   バッシュ中はfalse
      * @param living
      * @return
      */
@@ -57,7 +58,7 @@ public class Util
             //■アイテムを持っていて、使用中である。
             Item activeItem = activeStack.getItem();
 
-            if (!isBashing(living) && activeItem.getItemUseAction(activeStack) == EnumAction.BLOCK)
+            if (!Util.isBashing(living) && activeItem.getItemUseAction(activeStack) == EnumAction.BLOCK)
             {
                 return true;
             }
@@ -78,7 +79,7 @@ public class Util
         //■現在使ってるアイテムを取得
         ItemStack activeStack = living.getActiveItemStack();
 
-        if (isGuard(living))
+        if (Util.isGuard(living))
         {
             //■右クリックを押した瞬間～4tickまでは「ジャストガード」
             isJG = activeStack.getItem().getMaxItemUseDuration(activeStack) - living.getItemInUseCount() < 5;
@@ -139,7 +140,7 @@ public class Util
      */
     public static boolean canBlockDamageSource(DamageSource damageSourceIn, EntityLivingBase blocker, Vec3d posExplosion)
     {
-        if (!damageSourceIn.isUnblockable() && isGuard(blocker))
+        if (!damageSourceIn.isUnblockable() && Util.isGuard(blocker))
         {
             Vec3d posDamageSource = damageSourceIn.getDamageLocation();
 
@@ -202,19 +203,20 @@ public class Util
 
     public static void tameAIDonmov(EntityLiving target, int power)
     {
-        boolean is = false;
+        boolean isLearning = false;
         int tick = power * 20;
 
         for (EntityAITasks.EntityAITaskEntry entry : target.tasks.taskEntries)
         {
             if (entry.action instanceof EntityAIDonMov)
             {
-                EntityAIDonMov don = (EntityAIDonMov)entry.action;
-                don.tick = tick;
-                is = true;
+                EntityAIDonMov ai = (EntityAIDonMov)entry.action;
+                ai.tick = tick;
+                isLearning = true;
+                break;
             }
         }
-        if (!is)
+        if (!isLearning)
         {
             EntityAIDonMov ai = new EntityAIDonMov(target);
             ai.tick = tick;
@@ -234,7 +236,7 @@ public class Util
         //■プレイヤー位置
         Vec3d posLivEye = living.getPositionEyes(partialTicks);
         //■プレイヤー視線
-        Vec3d vecLivLook = getLook(living, partialTicks, offsetYaw);
+        Vec3d vecLivLook = Util.getLook(living, partialTicks, offsetYaw);
         //■プレイヤー視線(レンジ)
         Vec3d posLivRange = posLivEye.addVector(vecLivLook.xCoord * range, vecLivLook.yCoord * range, vecLivLook.zCoord * range);
         //■草とかに攻撃が吸われないように。
@@ -251,13 +253,13 @@ public class Util
     {
         if (partialTicks == 1.0F)
         {
-            return getVectorForRotation(living.rotationPitch, living.rotationYawHead + offsetYaw);
+            return Util.getVectorForRotation(living.rotationPitch, living.rotationYawHead + offsetYaw);
         }
         else
         {
             float f = living.prevRotationPitch + (living.rotationPitch - living.prevRotationPitch) * partialTicks;
             float f1 = living.prevRotationYawHead + (living.rotationYawHead - living.prevRotationYawHead) * partialTicks;
-            return getVectorForRotation(f, f1 + offsetYaw);
+            return Util.getVectorForRotation(f, f1 + offsetYaw);
         }
     }
 
@@ -269,5 +271,4 @@ public class Util
         float f3 = MathHelper.sin(-pitch * 0.017453292F);
         return new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
     }
-
 }
