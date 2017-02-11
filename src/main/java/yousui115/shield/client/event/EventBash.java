@@ -60,8 +60,6 @@ public class EventBash
                 //▼パワーバッシュは範囲攻撃(そして、草等のブロックを無視して攻撃が通る)
                 else
                 {
-                    //TODO 良い感じに動作してるけど、もっとスマートに組めるはず。要仕様見直し+リファクタリング
-
                     //■
                     float partialTicks = 1.0f;
                     Timer timer = (Timer)ObfuscationReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), 20);

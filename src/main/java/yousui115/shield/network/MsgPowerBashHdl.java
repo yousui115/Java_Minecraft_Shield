@@ -1,5 +1,6 @@
 package yousui115.shield.network;
 
+import java.util.Iterator;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -97,11 +98,12 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
             Vec3d posAttackerRange = posAttackerEye.add(Util.getLook(attacker, 1.0F, offsetYaw).scale(rangeAttacker));
 
             //■前にかき集めたEntityリストから対象をピックアップする
-            for (int j = 0; j < entities.size(); ++j)
+            Iterator<Entity> itr = entities.iterator();
+            while(itr.hasNext())
             {
                 //■リストからEntityを取得
                 //TODO:被害を受けるかどうかはまだ判らないからsuspect?
-                Entity victim = (Entity)entities.get(j);    //victim = 被害者(バッシュの)
+                Entity victim = itr.next();
 
                 //■Entityの当たり判定を拡張
                 double expand = 0.5;//(double)entity1.getCollisionBorderSize();
@@ -174,10 +176,11 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
                     }
 
                     //■リストから削除
-                    entities.remove(victim);
-                }
+                    itr.remove();
 
-            } //for (entities)
+                } //if (isHit)
+
+            } //while (itr.hasNext())
         } //for (rangeIn[])
 
         return isSound;
