@@ -2,6 +2,8 @@ package yousui115.shield;
 
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAITasks;
@@ -16,6 +18,7 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import yousui115.shield.ai.EntityAIDonMov;
 
@@ -54,7 +57,7 @@ public class Util
             //■アイテムを持っていて、使用中である。
             Item activeItem = activeStack.getItem();
 
-            if (!isBashing(living) && activeItem.getItemUseAction(activeStack) == EnumAction.BLOCK)
+            if (!Util.isBashing(living) && activeItem.getItemUseAction(activeStack) == EnumAction.BLOCK)
             {
                 return true;
             }
@@ -75,7 +78,7 @@ public class Util
         //■現在使ってるアイテムを取得
         ItemStack activeStack = living.getActiveItemStack();
 
-        if (isGuard(living))
+        if (Util.isGuard(living))
         {
             //■右クリックを押した瞬間～4tickまでは「ジャストガード」
             isJG = activeStack.getItem().getMaxItemUseDuration(activeStack) - living.getItemInUseCount() < 5;
@@ -136,7 +139,7 @@ public class Util
      */
     public static boolean canBlockDamageSource(DamageSource damageSourceIn, EntityLivingBase blocker, Vec3d posExplosion)
     {
-        if (!damageSourceIn.isUnblockable() && isGuard(blocker))
+        if (!damageSourceIn.isUnblockable() && Util.isGuard(blocker))
         {
             Vec3d posDamageSource = damageSourceIn.getDamageLocation();
 
@@ -177,6 +180,7 @@ public class Util
             if (living.getActiveItemStack().stackSize <= 0)
             {
                 EnumHand enumhand = living.getActiveHand();
+
                 if (living instanceof EntityPlayer)
                 {
                     net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem((EntityPlayer)living, living.getActiveItemStack(), enumhand);
@@ -191,7 +195,6 @@ public class Util
                     living.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, (ItemStack)null);
                 }
 
-//                living.activeItemStack = null;
                 living.resetActiveHand();
                 living.playSound(SoundEvents.ITEM_SHIELD_BREAK, 0.8F, 0.8F + living.worldObj.rand.nextFloat() * 0.4F);
             }
@@ -200,23 +203,72 @@ public class Util
 
     public static void tameAIDonmov(EntityLiving target, int power)
     {
-        boolean is = false;
+        boolean isLearning = false;
         int tick = power * 20;
 
         for (EntityAITasks.EntityAITaskEntry entry : target.tasks.taskEntries)
         {
             if (entry.action instanceof EntityAIDonMov)
             {
-                EntityAIDonMov don = (EntityAIDonMov)entry.action;
-                don.tick = tick;
-                is = true;
+                EntityAIDonMov ai = (EntityAIDonMov)entry.action;
+                ai.tick = tick;
+                isLearning = true;
+                break;
             }
         }
-        if (!is)
+        if (!isLearning)
         {
             EntityAIDonMov ai = new EntityAIDonMov(target);
             ai.tick = tick;
             target.tasks.addTask(0, ai);
         }
+    }
+
+    /**
+     * ■Entity.rayTrace参考
+     * @param living
+     * @param partialTick
+     * @return
+     */
+    @Nullable
+    public static RayTraceResult rayTrace(EntityLivingBase living, double range, float partialTicks, float offsetYaw)
+    {
+        //■プレイヤー位置
+        Vec3d posLivEye = living.getPositionEyes(partialTicks);
+        //■プレイヤー視線
+        Vec3d vecLivLook = Util.getLook(living, partialTicks, offsetYaw);
+        //■プレイヤー視線(レンジ)
+        Vec3d posLivRange = posLivEye.addVector(vecLivLook.xCoord * range, vecLivLook.yCoord * range, vecLivLook.zCoord * range);
+        //■草とかに攻撃が吸われないように。
+        return living.worldObj.rayTraceBlocks(posLivEye, posLivRange, false, true, true);
+    }
+
+    /**
+     * ■EntityLivingBaseをパｋ参考。
+     * @param living
+     * @param partialTicks
+     * @return
+     */
+    public static Vec3d getLook(EntityLivingBase living, float partialTicks, float offsetYaw)
+    {
+        if (partialTicks == 1.0F)
+        {
+            return Util.getVectorForRotation(living.rotationPitch, living.rotationYawHead + offsetYaw);
+        }
+        else
+        {
+            float f = living.prevRotationPitch + (living.rotationPitch - living.prevRotationPitch) * partialTicks;
+            float f1 = living.prevRotationYawHead + (living.rotationYawHead - living.prevRotationYawHead) * partialTicks;
+            return Util.getVectorForRotation(f, f1 + offsetYaw);
+        }
+    }
+
+    private static final Vec3d getVectorForRotation(float pitch, float yaw)
+    {
+        float f = MathHelper.cos(-yaw * 0.017453292F - (float)Math.PI);
+        float f1 = MathHelper.sin(-yaw * 0.017453292F - (float)Math.PI);
+        float f2 = -MathHelper.cos(-pitch * 0.017453292F);
+        float f3 = MathHelper.sin(-pitch * 0.017453292F);
+        return new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
     }
 }

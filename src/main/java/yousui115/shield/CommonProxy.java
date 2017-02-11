@@ -2,10 +2,11 @@ package yousui115.shield;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
-import yousui115.shield.event.EventGuardState;
 import yousui115.shield.event.EventGuardMove;
+import yousui115.shield.event.EventGuardState;
 
 public class CommonProxy
 {
@@ -13,7 +14,7 @@ public class CommonProxy
      * ■1tickに1度しか呼んではいけない。
      * @param isPush
      */
-    public void addPushAttack(boolean isPush){}
+    public void addPushAttack(){}
     /**
      * ■攻撃ボタンをリリースした瞬間
      * @return
@@ -38,6 +39,8 @@ public class CommonProxy
     }
 
     /* ================================ getter ================================ */
+    @Nullable
+    public Minecraft getMinecraft() { return null; }
     @Nullable
     public EntityPlayer getThePlayer() { return null; }
 }

@@ -5,8 +5,6 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.Timer;
 import net.minecraft.util.math.MathHelper;
@@ -38,18 +36,11 @@ public class EventBash
         if (!(event.getEntityLiving() instanceof EntityPlayer)) { return; }
         EntityPlayer player = (EntityPlayer)(event.getEntityLiving());
 
-        //▼1.バッシュ中である。
-        if (Util.isBashing(player))
-        {
-            //■バッシュ中は攻撃ボタンの入力を無視+リセット
-            Shield.proxy.resetAttack();
-        }
-        //▼2.ガード中である。(Not バッシュ)
-        else if (player.isActiveItemStackBlocking())
+        //▼ガード中である。(バッシュ中は入らない)
+        if (Util.isGuard(player))
         {
             //■攻撃ボタン入力の保持
-            boolean isPushAttack = Minecraft.getMinecraft().gameSettings.keyBindAttack.isKeyDown();
-            Shield.proxy.addPushAttack(isPushAttack);
+            Shield.proxy.addPushAttack();
 
             //▼攻撃ボタン押下->解放の瞬間
             if (Shield.proxy.isReleaseAttack())
@@ -69,32 +60,52 @@ public class EventBash
                 //▼パワーバッシュは範囲攻撃(そして、草等のブロックを無視して攻撃が通る)
                 else
                 {
-                    double range = (double)Minecraft.getMinecraft().playerController.getBlockReachDistance();
-                    float tick = 1.0f;
+                    //■
+                    float partialTicks = 1.0f;
                     Timer timer = (Timer)ObfuscationReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), 20);
-                    tick = timer.renderPartialTicks;
+                    partialTicks = timer.renderPartialTicks;
 
-//                    RayTraceResult result = player.rayTrace(range, 1.0f);
-                    Vec3d posPlyEye = player.getPositionEyes(1.0f);
-                    Vec3d vecPlyLook = player.getLook(1.0f);
-                    Vec3d vecPlyRange = posPlyEye.addVector(vecPlyLook.xCoord * range, vecPlyLook.yCoord * range, vecPlyLook.zCoord * range);
-                    RayTraceResult result = player.worldObj.rayTraceBlocks(posPlyEye, vecPlyRange, false, true, true);
+                    //■攻撃が届く範囲
+                    double rangePlayer = (double)Minecraft.getMinecraft().playerController.getBlockReachDistance();
 
+                    float offset = 35;
+                    double range[] = { rangePlayer, rangePlayer, rangePlayer };
 
-                    if (result != null && result.typeOfHit == RayTraceResult.Type.BLOCK)
+                    for (int idx = 0; idx < range.length; idx++)
                     {
-                        range = result.hitVec.distanceTo(player.getPositionEyes(tick));
+                        //■基本レンジ
+//                        rangePlayer = (double)Minecraft.getMinecraft().playerController.getBlockReachDistance();
+
+                        //■レイトレース(Y軸回転)補正
+                        float offsetYaw = (idx - 1) * offset;
+
+                        //■レイトレース(草ブロック等は無視するように設定)
+                        RayTraceResult resultBlock = Util.rayTrace(player, range[idx], 1.0F, offsetYaw);
+
+                        //■視点
+                        Vec3d posPlayerEye = player.getPositionEyes(partialTicks);
+
+                        //■ブロックがあれば、ブロックまでの距離を取得
+                        if (resultBlock != null && resultBlock.typeOfHit == RayTraceResult.Type.BLOCK)
+                        {
+                            range[idx] = resultBlock.hitVec.distanceTo(posPlayerEye);
+                        }
+
                     }
-                    PacketHandler.INSTANCE.sendToServer(new MsgPowerBash(range, Shield.proxy.getPower(), 1));
+
+                    //■パケットの送信
+                    PacketHandler.INSTANCE.sendToServer(new MsgPowerBash(partialTicks, range, offset, Shield.proxy.getPower(), 1));
+
                 }
             }
         }
-        //▼3.バッシュもガードもしていない。
+        //▼バッシュ中、もしくは、ガードしていない
         else
         {
             Shield.proxy.resetAttack();
         }
     }
+
 
     /**
      * ■バッシュアニメーション
@@ -106,25 +117,7 @@ public class EventBash
         //Minecraft.getMinecraft().getItemRenderer().
         EntityPlayer player = Shield.proxy.getThePlayer();
         if (player == null) { return; }
-        IAttributeInstance attri = player.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED);
 
-//        if (player.getActiveHand() == event.getHand()
-//            && attri.hasModifier(Util.guardSprintSpeedModifier))
-//        {
-//            //■push
-//            GlStateManager.pushMatrix();
-//
-//            //float fcos = MathHelper.abs(event.getSwingProgress() - 0.5f);
-//            GlStateManager.translate(0.3f, 0.3f, 0f);
-//            Minecraft.getMinecraft().getItemRenderer().renderItemInFirstPerson((AbstractClientPlayer)player, event.getPartialTicks(), event.getInterpolatedPitch(), event.getHand(), event.getSwingProgress(), event.getItemStack(), event.getEquipProgress());
-//
-//            //■pop
-//            GlStateManager.popMatrix();
-//
-//            event.setCanceled(true);
-//
-//        }
-//        else
         if (player.getActiveHand() == event.getHand()
             && Util.isBashing(player))
         {
@@ -140,7 +133,5 @@ public class EventBash
 
             event.setCanceled(true);
         }
-
-
     }
 }

@@ -100,7 +100,6 @@ public class EventGuardState
                 //▼爆発をジャストガードした時の処理
 
             }
-//            else if (Util.isGuard(blocker) && getEnchGuardLevel_UsingItem(blocker) != 0)
             else if (Util.isGuard(blocker))
             {
                 //▼爆発をガードした時の処理(ジャストガード除く)
@@ -179,9 +178,11 @@ public class EventGuardState
 //                            blocker.motionZ += d9 * d11;
 //                        }
 
-                        blocker.motionX += d5 * d11;
-                        blocker.motionY += d7 * d11;
-                        blocker.motionZ += d9 * d11;
+                        double knock = 0.1;
+
+                        blocker.motionX += d5 * d11 * knock;
+                        blocker.motionY += d7 * d11 * knock;
+                        blocker.motionZ += d9 * d11 * knock;
 
                         if (blocker instanceof EntityPlayer)
                         {
