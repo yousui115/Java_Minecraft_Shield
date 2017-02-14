@@ -171,7 +171,7 @@ public class Util
     //■シールドのダメージ処理
     public static void damageShield(EntityLivingBase living, float damage)
     {
-        if (damage >= 3.0F)// && living.getActiveItemStack().getItem() == Items.SHIELD)
+        if (damage >= 3.0F)// && living.getActiveItemStack().getItem() instanceof ItemShield)
         {
             int i = 1 + MathHelper.floor_float(damage);
             living.getActiveItemStack().damageItem(i, living);

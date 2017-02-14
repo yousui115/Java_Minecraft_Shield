@@ -1,7 +1,7 @@
 #盾
 
-##■DL (M1102_F2185_v4)<br>
-https://www.dropbox.com/s/4a4u5g9h5cl5m2m/shield_M1102_F2185_v4.jar?dl=0<br>
+##■DL (M1102_F2185_v5)<br>
+https://www.dropbox.com/s/83k79sxrw35i1gl/shield_M1102_F2185_v5.jar?dl=0<br>
 
 ##■動作環境<br>
 Minecraft 1.10.2<br>
@@ -41,7 +41,7 @@ Forge 2185<br>
 　　　　　　　　　　耐久値を2消費する。<br>
 <br>
 ##■その他<br>
-爆発をガードした時のノックバックが減少しています。(MC1.11以降チック)<br>
+ガード成功時、ダメージ100%カット<br>
 
 スケさんの弓をガードした場合、一瞬加速しますが、現状仕様となっています。<br>
 

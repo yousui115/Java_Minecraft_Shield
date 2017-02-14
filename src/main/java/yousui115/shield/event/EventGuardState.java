@@ -6,8 +6,10 @@ import net.minecraft.enchantment.EnchantmentProtection;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EntityDamageSource;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Explosion;
@@ -21,51 +23,66 @@ import yousui115.shield.Util;
 public class EventGuardState
 {
     /**
-     * ■バッシュ中はダメージを通す。
-     *   メリットもあれば、デメリットもある。
+     * ■ガード時 に行う処理
      * @param event
      */
     @SubscribeEvent
-    public void changeUnBlockable(LivingAttackEvent event)
+    public void doGuard(LivingAttackEvent event)
     {
-        EntityLivingBase defender = event.getEntityLiving();
+        //■ダメージ処理がスキップされるようなので、何もしない。
+        if (event.isCanceled()) { return; }
+
+        //■攻撃を受けるEntity
+        EntityLivingBase blocker = event.getEntityLiving();
+        //■だめーじそーす
         DamageSource source = event.getSource();
 
-        if (Util.isBashing(defender))
+        //■バッシュ中は無防備なので、どんなダメージも受け流す (UnBlockable=true)
+        if (Util.isBashing(blocker))
         {
-            ObfuscationReflectionHelper.setPrivateValue(DamageSource.class, source, true, 19);
+            ObfuscationReflectionHelper.setPrivateValue(DamageSource.class, source, true, 18);
+            return;
         }
-    }
-
-    /**
-     * ■ジャストガード時 に行う処理
-     * @param event
-     */
-    @SubscribeEvent
-    public void doJustGuard(LivingAttackEvent event)
-    {
-        EntityLivingBase defender = event.getEntityLiving();
-        DamageSource source = event.getSource();
 
         //■ガード可能か否か(ガード不可攻撃、ガード状態、ガード方向の判定）
-        if (!Util.canBlockDamageSource(source, defender, null)) { return; }
+        if (!Util.canBlockDamageSource(source, blocker, null)) { return; }
 
-        //■ジャストガードしたか否か
-        if (Util.isJustGuard(defender))
+        //▼ジャストガード。
+        if (Util.isJustGuard(blocker))
         {
             //■ジャストガードが発生したので、呼び出し元の後処理を行わせない。
             event.setCanceled(true);
 
             //■ジャストガード時の処理
-            if (source.getSourceOfDamage() != null &&
-                source.getSourceOfDamage().isEntityAlive() &&
-                source.getSourceOfDamage() instanceof EntityLivingBase)
+            if (source.getSourceOfDamage() instanceof EntityLivingBase)
             {
-                //■アタッカーに1ダメージ＋ノックバック
+                //■アタッカーにノックバック
                 EntityLivingBase attacker = (EntityLivingBase)source.getSourceOfDamage();
-//                attacker.attackEntityFrom(DamageSource.causeMobDamage(defender), 1);
-                attacker.knockBack(defender, 0.5F, defender.posX - attacker.posX, defender.posZ - attacker.posZ);
+                attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
             }
+        }
+        //▼ノーマルガード。
+        else
+        {
+            //MEMO 1.10.2 だけの特殊処理(1.11以降ではいらない)
+            //■ガードしたので、呼び出し元の後処理を行わせない。
+            event.setCanceled(true);
+
+            //MEMO 「ダメージを33%まで減衰させて通す」処理を組もうとすると、とてつもなく面倒。
+
+            //■ガード時の処理
+            if (source.getSourceOfDamage() instanceof EntityLivingBase)
+            {
+                //■アタッカーにノックバック
+                EntityLivingBase attacker = (EntityLivingBase)source.getSourceOfDamage();
+                attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
+            }
+
+            //■盾にダメージ
+            Util.damageShield(blocker, event.getAmount());
+
+            //■音
+            blocker.worldObj.playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.worldObj.rand.nextFloat() * 0.4F);
         }
     }
 
@@ -94,41 +111,30 @@ public class EventGuardState
             DamageSource source = DamageSource.causeExplosionDamage(event.getExplosion());
             if (!Util.canBlockDamageSource(source, blocker, event.getExplosion().getPosition())) { continue; }
 
-            //■
-            if (Util.isJustGuard(blocker))
+            //  Explosion.doExplosionA() を参考
+            Explosion expl = event.getExplosion();
+            double explosionX = expl.getPosition().xCoord;
+            double explosionY = expl.getPosition().yCoord;
+            double explosionZ = expl.getPosition().zCoord;
+            float explSize = ObfuscationReflectionHelper.getPrivateValue(Explosion.class, expl, 8);
+
+            float f3 = explSize * 2.0f;
+            double d12 = blocker.getDistance(explosionX, explosionY, explosionZ) / (double)f3;
+
+            if (d12 <= 1.0D)
             {
-                //▼爆発をジャストガードした時の処理
+                double d5 = blocker.posX - explosionX;
+                double d7 = blocker.posY + (double)blocker.getEyeHeight() - explosionY;
+                double d9 = blocker.posZ - explosionZ;
+                double d13 = (double)MathHelper.sqrt_double(d5 * d5 + d7 * d7 + d9 * d9);
 
-            }
-            else if (Util.isGuard(blocker))
-            {
-                //▼爆発をガードした時の処理(ジャストガード除く)
-
-                //■爆発を通常ガードした時の処理
-                //  Explosion.doExplosionA() のほぼコピペ
-                Explosion expl = event.getExplosion();
-                double explosionX = expl.getPosition().xCoord;
-                double explosionY = expl.getPosition().yCoord;
-                double explosionZ = expl.getPosition().zCoord;
-                float explSize = ObfuscationReflectionHelper.getPrivateValue(Explosion.class, expl, 8);
-
-                float f3 = explSize * 2.0f;
-                double d12 = blocker.getDistance(explosionX, explosionY, explosionZ) / (double)f3;
-
-                if (d12 <= 1.0D)
+                if (d13 != 0.0D)
                 {
-                    double d5 = blocker.posX - explosionX;
-                    double d7 = blocker.posY + (double)blocker.getEyeHeight() - explosionY;
-                    double d9 = blocker.posZ - explosionZ;
-                    double d13 = (double)MathHelper.sqrt_double(d5 * d5 + d7 * d7 + d9 * d9);
-
-                    if (d13 != 0.0D)
-                    {
-                        d5 = d5 / d13;
-                        d7 = d7 / d13;
-                        d9 = d9 / d13;
-                        double d14 = (double)blocker.worldObj.getBlockDensity(expl.getPosition(), blocker.getEntityBoundingBox());
-                        double d10 = (1.0D - d12) * d14;
+                    d5 = d5 / d13;
+                    d7 = d7 / d13;
+                    d9 = d9 / d13;
+                    double d14 = (double)blocker.worldObj.getBlockDensity(expl.getPosition(), blocker.getEntityBoundingBox());
+                    double d10 = (1.0D - d12) * d14;
 
 //                        //■ノックバックはあるが、上には吹っ飛ばない。
 //                        int level = getEnchGuardLevel_UsingItem(blocker);
@@ -139,8 +145,8 @@ public class EventGuardState
 //                            iattributeinstance.removeModifier(modifierGuardKnockback1);
 //                        }
 
-                        //■ダメージ処理
-                        float damage = (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)f3 + 1.0D));
+                    //■ダメージ処理
+                    float damage = (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)f3 + 1.0D));
 //                        //TNT用
 //                        if (level == 1)
 //                        {
@@ -153,16 +159,19 @@ public class EventGuardState
 //                            damage -= 5.0f;
 //                        }
 
-                        Entity exploder = (Entity)ObfuscationReflectionHelper.getPrivateValue(Explosion.class, expl, 7);
-                        if (exploder != null)
-                        {
-                            blocker.attackEntityFrom((new EntityDamageSource("explosion", exploder)).setDifficultyScaled().setExplosion(), damage);
-                        }
-                        else
-                        {
-                            blocker.attackEntityFrom(DamageSource.causeExplosionDamage(expl), damage);
-                        }
+                    Entity exploder = (Entity)ObfuscationReflectionHelper.getPrivateValue(Explosion.class, expl, 7);
+                    boolean isDamage = true;
+                    if (exploder != null)
+                    {
+                        isDamage = blocker.attackEntityFrom((new EntityDamageSource("explosion", exploder)).setDifficultyScaled().setExplosion(), damage);
+                    }
+                    else
+                    {
+                        isDamage = blocker.attackEntityFrom(DamageSource.causeExplosionDamage(expl), damage);
+                    }
 
+                    if (isDamage || !Util.isJustGuard(blocker))
+                    {
                         double d11 = d10;
 
                         //■エンチャント：爆発耐性 でのノックバック耐性
@@ -193,13 +202,8 @@ public class EventGuardState
                                 expl.getPlayerKnockbackMap().put(entityplayer, new Vec3d(d5 * d10, d7 * d10, d9 * d10));
                             }
                         }
-
-                    }
+                    } //if (isDamage)
                 }
-            }
-            else
-            {
-                continue;
             }
 
             //■ブロッキングしてる生物 なので、従来の処理を走らせないようにリストから削除
