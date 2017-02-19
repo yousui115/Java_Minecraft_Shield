@@ -1,7 +1,7 @@
 #盾
 
-##■DL (M1102_F2185_v5)<br>
-https://www.dropbox.com/s/83k79sxrw35i1gl/shield_M1102_F2185_v5.jar?dl=0<br>
+##■DL (M1102_F2185_v6)<br>
+https://www.dropbox.com/s/7wi2hzowqzybhjd/shield_M1102_F2185_v6.jar?dl=0<br>
 
 ##■動作環境<br>
 Minecraft 1.10.2<br>
