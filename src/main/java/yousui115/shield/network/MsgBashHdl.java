@@ -2,14 +2,17 @@ package yousui115.shield.network;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import yousui115.shield.Util;
+import yousui115.shield.event.BashEvent;
 
 public class MsgBashHdl implements IMessageHandler<MsgBash, IMessage>
 {
@@ -41,6 +44,10 @@ public class MsgBashHdl implements IMessageHandler<MsgBash, IMessage>
 
             //■耐久値減少(バッシュ:1 パワーバッシュ:2)
             player.getActiveItemStack().damageItem(power, player);
+
+            //■イベント
+            BashEvent bashEvent = new BashEvent(player, (EntityLivingBase)target, power);
+            MinecraftForge.EVENT_BUS.post(bashEvent);
         }
 
         return null;

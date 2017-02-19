@@ -56,6 +56,7 @@ public class EventBash
                     {
                         PacketHandler.INSTANCE.sendToServer(new MsgBash(target, Shield.proxy.getPower(), 1));
                     }
+
                 }
                 //▼パワーバッシュは範囲攻撃(そして、草等のブロックを無視して攻撃が通る)
                 else

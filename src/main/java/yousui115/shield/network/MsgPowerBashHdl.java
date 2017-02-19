@@ -15,10 +15,12 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import yousui115.shield.Util;
+import yousui115.shield.event.BashEvent;
 
 import com.google.common.base.Predicate;
 
@@ -173,6 +175,11 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
                         {
                             //TODO
                         }
+
+                        //■イベント
+                        BashEvent bashEvent = new BashEvent(attacker, (EntityLivingBase)victim, powerIn);
+                        MinecraftForge.EVENT_BUS.post(bashEvent);
+
                     }
 
                     //■リストから削除
