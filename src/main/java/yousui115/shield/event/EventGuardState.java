@@ -44,11 +44,22 @@ public class EventGuardState
             return;
         }
 
+        boolean isJG = Util.isJustGuard(blocker);
+        float amount = event.getAmount();
+
+        //■イベント
+        GuardEvent guardEvent = ShieldHooks.onGuard(blocker, isJG, source, amount);
+
+        isJG = guardEvent.isJG;
+        source = guardEvent.source;
+        amount = guardEvent.amount;
+
+
         //■ガード可能か否か(ガード不可攻撃、ガード状態、ガード方向の判定）
         if (!Util.canBlockDamageSource(source, blocker, null)) { return; }
 
         //▼ジャストガード。
-        if (Util.isJustGuard(blocker))
+        if (isJG)
         {
             //■ジャストガードが発生したので、呼び出し元の後処理を行わせない。
             event.setCanceled(true);
@@ -59,7 +70,14 @@ public class EventGuardState
                 //■アタッカーにノックバック
                 EntityLivingBase attacker = (EntityLivingBase)source.getSourceOfDamage();
                 attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
+
+                //■イベント
+                ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount);
             }
+
+            //■音
+            blocker.worldObj.playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.worldObj.rand.nextFloat() * 0.4F);
+
         }
         //▼ノーマルガード。
         else
@@ -68,18 +86,19 @@ public class EventGuardState
             //■ガードしたので、呼び出し元の後処理を行わせない。
             event.setCanceled(true);
 
-            //MEMO 「ダメージを33%まで減衰させて通す」処理を組もうとすると、とてつもなく面倒。
-
             //■ガード時の処理
             if (source.getSourceOfDamage() instanceof EntityLivingBase)
             {
                 //■アタッカーにノックバック
                 EntityLivingBase attacker = (EntityLivingBase)source.getSourceOfDamage();
                 attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
+
+                //■イベント
+                ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount);
             }
 
             //■盾にダメージ
-            Util.damageShield(blocker, event.getAmount());
+            Util.damageShield(blocker, amount);
 
             //■音
             blocker.worldObj.playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.worldObj.rand.nextFloat() * 0.4F);
@@ -136,28 +155,8 @@ public class EventGuardState
                     double d14 = (double)blocker.worldObj.getBlockDensity(expl.getPosition(), blocker.getEntityBoundingBox());
                     double d10 = (1.0D - d12) * d14;
 
-//                        //■ノックバックはあるが、上には吹っ飛ばない。
-//                        int level = getEnchGuardLevel_UsingItem(blocker);
-//                        if (level == 1)
-//                        {
-//                            //■ノックバック耐性上昇 の剥奪
-//                            IAttributeInstance iattributeinstance = blocker.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE);
-//                            iattributeinstance.removeModifier(modifierGuardKnockback1);
-//                        }
-
                     //■ダメージ処理
                     float damage = (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)f3 + 1.0D));
-//                        //TNT用
-//                        if (level == 1)
-//                        {
-//                            //▼ガード性能１
-//                            damage -= 2.0f;
-//                        }
-//                        else if (level == 2)
-//                        {
-//                            //▼ガード性能２
-//                            damage -= 5.0f;
-//                        }
 
                     Entity exploder = (Entity)ObfuscationReflectionHelper.getPrivateValue(Explosion.class, expl, 7);
                     boolean isDamage = true;
@@ -179,13 +178,6 @@ public class EventGuardState
                         {
                             d11 = EnchantmentProtection.getBlastDamageReduction((EntityLivingBase)blocker, d10);
                         }
-
-//                        //■ノックバックはあるが、上には吹っ飛ばない。
-//                        if (level == 1)
-//                        {
-//                            blocker.motionX += d5 * d11;
-//                            blocker.motionZ += d9 * d11;
-//                        }
 
                         double knock = 0.1;
 

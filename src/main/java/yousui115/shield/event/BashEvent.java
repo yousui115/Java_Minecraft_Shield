@@ -1,22 +1,24 @@
 package yousui115.shield.event;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
 public class BashEvent extends Event
 {
-    private final EntityLivingBase bashLiving;
-    private final EntityLivingBase victimLiving;
-    private final int power;
+    public final EntityLivingBase basher;
+    public final Entity victim;
+    public final int power;
+    public int amount;
 
-    public BashEvent(EntityLivingBase bashIn, EntityLivingBase victimIn, int powerIn)
+    public BashEvent(EntityLivingBase basherIn, Entity victimIn, int powerIn, int amountIn)
     {
-        bashLiving = bashIn;
-        victimLiving = victimIn;
+        basher = basherIn;
+        victim = victimIn;
         power = powerIn;
+        amount = amountIn;
     }
 
-    public EntityLivingBase getBashLiving() { return bashLiving; }
-    public EntityLivingBase getVictimLiving() { return victimLiving; }
-    public int getPower() { return power; }
+    @Override
+    public boolean isCancelable() { return true; }
 }

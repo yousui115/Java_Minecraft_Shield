@@ -15,12 +15,12 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import yousui115.shield.Util;
 import yousui115.shield.event.BashEvent;
+import yousui115.shield.event.ShieldHooks;
 
 import com.google.common.base.Predicate;
 
@@ -28,7 +28,6 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
 {
     /**
      * ■Client -> Server
-     *   TODO 要リファクタリング
      */
     @Override
     public IMessage onMessage(MsgPowerBash msg, MessageContext ctx)
@@ -147,6 +146,14 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
                 //■パワーバッシュがヒットしている。
                 if (isHit)
                 {
+                    //■イベント
+                    BashEvent event = ShieldHooks.onBashAttack(attacker, victim, powerIn, amountIn);
+                    if (Util.isEventCanceled(event)) { continue; }
+
+                    //■パラメータの書き換え
+                    amountIn = event.amount;
+
+                    //■一体にでも攻撃が当たればSEが鳴る
                     isSound = true;
 
                     //■ダメージソースとダメージの設定
@@ -175,11 +182,6 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
                         {
                             //TODO
                         }
-
-                        //■イベント
-                        BashEvent bashEvent = new BashEvent(attacker, (EntityLivingBase)victim, powerIn);
-                        MinecraftForge.EVENT_BUS.post(bashEvent);
-
                     }
 
                     //■リストから削除

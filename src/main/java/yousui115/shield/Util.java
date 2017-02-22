@@ -9,6 +9,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumAction;
@@ -16,10 +17,10 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraftforge.fml.common.eventhandler.Event;
 import yousui115.shield.ai.EntityAIDonMov;
 
 //TODO 継ぎ接ぎだらけなので、余力があったらリファクタリングしましょう。
@@ -84,12 +85,6 @@ public class Util
             isJG = activeStack.getItem().getMaxItemUseDuration(activeStack) - living.getItemInUseCount() < 5;
         }
 
-        //■音を鳴らす
-        if (!living.worldObj.isRemote && isJG)
-        {
-            living.worldObj.playSound(null, living.posX, living.posY, living.posZ, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 1.0f, 1.5f);
-        }
-
         return isJG;
     }
 
@@ -107,27 +102,6 @@ public class Util
 
         return false;
     }
-
-    /**
-     * ■使用中アイテム の ガード性能レベル を取得
-     * @param living
-     * @return 0:恩恵無し 1:ガード性能１ 2:ガード性能２
-     */
-//    public static int getEnchGuardLevel_UsingItem(EntityLivingBase living)
-//    {
-//        int level = 0;
-//
-//        //■現在使ってるアイテムを取得
-//        ItemStack activeStack = living.getActiveItemStack();
-//
-//        if (isGuard(living))
-//        {
-//            level = EnchantmentHelper.getEnchantmentLevel(enchGuard, activeStack);
-//        }
-//
-//        return level;
-//    }
-
 
     /**
      * ■ダメージソース がガード可能か否か (ブロック不可・ガード状態・ガード方向の調査)
@@ -160,18 +134,18 @@ public class Util
             }
         }
 
-        //■ノックバック耐性上昇 の剥奪
-        //  (メソッド名から見て、ここに含むべきではないかなぁ。でも、false なら剥奪処理は必ず行うしなぁ)
-//        IAttributeInstance iattributeinstance = blocker.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE);
-//        iattributeinstance.removeModifier(modifierGuardKnockback1);
-
         return false;
     }
 
-    //■シールドのダメージ処理
+
+    /**
+     * ■シールドのダメージ処理
+     * @param living
+     * @param damage
+     */
     public static void damageShield(EntityLivingBase living, float damage)
     {
-        if (damage >= 3.0F)// && living.getActiveItemStack().getItem() instanceof ItemShield)
+        if (damage >= 3.0F && living.getActiveItemStack().getItem() == Items.SHIELD)
         {
             int i = 1 + MathHelper.floor_float(damage);
             living.getActiveItemStack().damageItem(i, living);
@@ -201,6 +175,11 @@ public class Util
         }
     }
 
+    /**
+     * ■行動不能AIの植え付け
+     * @param target
+     * @param power
+     */
     public static void tameAIDonmov(EntityLiving target, int power)
     {
         boolean isLearning = false;
@@ -270,5 +249,10 @@ public class Util
         float f2 = -MathHelper.cos(-pitch * 0.017453292F);
         float f3 = MathHelper.sin(-pitch * 0.017453292F);
         return new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
+    }
+
+    public static boolean isEventCanceled(Event event)
+    {
+        return event.isCancelable() ? event.isCanceled() : false;
     }
 }
