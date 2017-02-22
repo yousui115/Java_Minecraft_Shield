@@ -1,7 +1,7 @@
-#盾
+#盾強化
 
-##■DL (M1102_F2185_v6)<br>
-https://www.dropbox.com/s/7wi2hzowqzybhjd/shield_M1102_F2185_v6.jar?dl=0<br>
+##■DL (M1102_F2185_v7)<br>
+https://www.dropbox.com/s/gsyirg3wfkx1i8t/shield_M1102_F2185_v7.jar?dl=0<br>
 
 ##■動作環境<br>
 Minecraft 1.10.2<br>
