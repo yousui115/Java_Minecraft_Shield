@@ -152,6 +152,7 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
 
                     //■パラメータの書き換え
                     amountIn = event.amount;
+                    powerIn  = event.power;
 
                     //■一体にでも攻撃が当たればSEが鳴る
                     isSound = true;
