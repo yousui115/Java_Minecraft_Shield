@@ -16,6 +16,7 @@ import net.minecraft.world.Explosion;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import yousui115.shield.Util;
 
@@ -26,7 +27,7 @@ public class EventGuardState
      * ■ガード時 に行う処理
      * @param event
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOW)
     public void doGuard(LivingAttackEvent event)
     {
         //■ダメージ処理がスキップされるようなので、何もしない。
@@ -40,20 +41,22 @@ public class EventGuardState
         //■バッシュ中は無防備なので、どんなダメージも受け流す (UnBlockable=true)
         if (Util.isBashing(blocker))
         {
-            ObfuscationReflectionHelper.setPrivateValue(DamageSource.class, source, true, 18);
+            ObfuscationReflectionHelper.setPrivateValue(DamageSource.class, source, true, 20);
             return;
         }
 
         boolean isJG = Util.isJustGuard(blocker);
         float amount = event.getAmount();
+        boolean isGuard = Util.canBlockDamageSource(source, blocker, null);
 
         //■イベント
-        GuardEvent guardEvent = ShieldHooks.onGuard(blocker, isJG, source, amount);
+        GuardEvent guardEvent = ShieldHooks.onGuard(blocker, isJG, isGuard, source, amount);
 
         isJG = guardEvent.isJG;
         source = guardEvent.source;
         amount = guardEvent.amount;
 
+        if (amount <= 0) { event.setCanceled(true); return; }
 
         //■ガード可能か否か(ガード不可攻撃、ガード状態、ガード方向の判定）
         if (!Util.canBlockDamageSource(source, blocker, null)) { return; }
@@ -76,7 +79,7 @@ public class EventGuardState
             }
 
             //■音
-            blocker.worldObj.playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.worldObj.rand.nextFloat() * 0.4F);
+            blocker.getEntityWorld().playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.getEntityWorld().rand.nextFloat() * 0.4F);
 
         }
         //▼ノーマルガード。
@@ -84,24 +87,24 @@ public class EventGuardState
         {
             //MEMO 1.10.2 だけの特殊処理(1.11以降ではいらない)
             //■ガードしたので、呼び出し元の後処理を行わせない。
-            event.setCanceled(true);
+//            event.setCanceled(true);
 
             //■ガード時の処理
             if (source.getSourceOfDamage() instanceof EntityLivingBase)
             {
                 //■アタッカーにノックバック
                 EntityLivingBase attacker = (EntityLivingBase)source.getSourceOfDamage();
-                attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
+//                attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
 
                 //■イベント
                 ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount);
             }
 
             //■盾にダメージ
-            Util.damageShield(blocker, amount);
+//            Util.damageShield(blocker, amount);
 
             //■音
-            blocker.worldObj.playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.worldObj.rand.nextFloat() * 0.4F);
+//            blocker.getEntityWorld().playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.getEntityWorld().rand.nextFloat() * 0.4F);
         }
     }
 
@@ -145,14 +148,14 @@ public class EventGuardState
                 double d5 = blocker.posX - explosionX;
                 double d7 = blocker.posY + (double)blocker.getEyeHeight() - explosionY;
                 double d9 = blocker.posZ - explosionZ;
-                double d13 = (double)MathHelper.sqrt_double(d5 * d5 + d7 * d7 + d9 * d9);
+                double d13 = (double)MathHelper.sqrt(d5 * d5 + d7 * d7 + d9 * d9);
 
                 if (d13 != 0.0D)
                 {
                     d5 = d5 / d13;
                     d7 = d7 / d13;
                     d9 = d9 / d13;
-                    double d14 = (double)blocker.worldObj.getBlockDensity(expl.getPosition(), blocker.getEntityBoundingBox());
+                    double d14 = (double)blocker.getEntityWorld().getBlockDensity(expl.getPosition(), blocker.getEntityBoundingBox());
                     double d10 = (1.0D - d12) * d14;
 
                     //■ダメージ処理

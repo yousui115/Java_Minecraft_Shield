@@ -68,7 +68,7 @@ public class EventFOVChange
 
         //■パワーバッシュ溜め時のFOVの設定
         int border = Shield.proxy.getNumAttackLength() / 2;
-        int tick = MathHelper.clamp_int(Shield.proxy.getNumAttackTick() - border, 0, border);
+        int tick = MathHelper.clamp(Shield.proxy.getNumAttackTick() - border, 0, border);
         event.setNewfov(f - (0.02f * (float)tick));
 
     }

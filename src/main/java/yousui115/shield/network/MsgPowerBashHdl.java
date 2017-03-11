@@ -10,6 +10,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
@@ -42,10 +43,14 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
         if (isHit)
         {
             //■盾にダメージ
-            player.getActiveItemStack().damageItem(msg.getPower(), player);
+            ItemStack active = player.getActiveItemStack();
+            if (!Util.isEmptyStack(active))
+            {
+                player.getActiveItemStack().damageItem(msg.getPower(), player);
 
-            //■パワーバッシュ音
-            player.worldObj.playSound((EntityPlayer)null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_BLAZE_HURT, player.getSoundCategory(), 1.0F, 1.0F);
+                //■パワーバッシュ音
+                player.getEntityWorld().playSound((EntityPlayer)null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_BLAZE_HURT, player.getSoundCategory(), 1.0F, 1.0F);
+            }
         }
 
         return null;
@@ -69,7 +74,7 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
         }
 
         //■範囲内のEntityをかき集める。(どの方向を向いてても良い様にexpandXyz(range))
-        List<Entity> entities = attacker.worldObj.getEntitiesInAABBexcluding(
+        List<Entity> entities = attacker.getEntityWorld().getEntitiesInAABBexcluding(
                                     attacker,
                                     attacker.getEntityBoundingBox().expandXyz(rangeAttacker),
 //                                    Predicates.and(EntitySelectors.NOT_SPECTATING,
@@ -152,6 +157,7 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
 
                     //■パラメータの書き換え
                     amountIn = event.amount;
+                    powerIn  = event.power;
 
                     //■一体にでも攻撃が当たればSEが鳴る
                     isSound = true;

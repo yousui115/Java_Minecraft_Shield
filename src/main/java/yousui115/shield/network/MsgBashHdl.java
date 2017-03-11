@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -25,13 +26,13 @@ public class MsgBashHdl implements IMessageHandler<MsgBash, IMessage>
         EntityPlayer player = ctx.getServerHandler().playerEntity;
 
         //■バッシュターゲット
-        Entity entity = player.worldObj.getEntityByID(msg.getTargetID());
+        Entity entity = player.getEntityWorld().getEntityByID(msg.getTargetID());
 
         if (entity instanceof EntityLiving)
         {
             //■ターゲット(置き換え)
             EntityLiving target = (EntityLiving)entity;
-            int power = MathHelper.clamp_int(msg.getPower(), 1, 2);
+            int power = MathHelper.clamp(msg.getPower(), 1, 2);
             int amount = msg.getAmount();
 
             //■イベント
@@ -40,6 +41,7 @@ public class MsgBashHdl implements IMessageHandler<MsgBash, IMessage>
             {
                 //■パラメータの書き換え
                 amount = event.amount;
+                power  = event.power;
 
                 //■メインターゲットをノックバック＋ダメージ(バッシュ強度依存)
                 target.knockBack(player, 0.5F * (float)power, player.posX - target.posX, player.posZ - target.posZ);
@@ -49,10 +51,14 @@ public class MsgBashHdl implements IMessageHandler<MsgBash, IMessage>
                 Util.tameAIDonmov(target, power);
 
                 //■バッシュ打撃音
-                player.worldObj.playSound((EntityPlayer)null, player.posX, player.posY, player.posZ, SoundEvents.ITEM_SHIELD_BLOCK, player.getSoundCategory(), 1.0F, 1.0F);
+                player.getEntityWorld().playSound((EntityPlayer)null, player.posX, player.posY, player.posZ, SoundEvents.ITEM_SHIELD_BLOCK, player.getSoundCategory(), 1.0F, 1.0F);
 
                 //■耐久値減少(バッシュ:1 パワーバッシュ:2)
-                player.getActiveItemStack().damageItem(power, player);
+                ItemStack active = player.getActiveItemStack();
+                if (!Util.isEmptyStack(active))
+                {
+                    player.getActiveItemStack().damageItem(power, player);
+                }
             }
         }
 

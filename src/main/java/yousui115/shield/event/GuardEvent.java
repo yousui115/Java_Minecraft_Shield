@@ -8,13 +8,15 @@ public class GuardEvent  extends Event
 {
     public EntityLivingBase blocker;
     public boolean isJG;
+    public boolean isGuard;
     public DamageSource source;
     public float amount;
 
-    public GuardEvent(EntityLivingBase blockerIn, boolean isJGIn, DamageSource sourceIn, float amountIn)
+    public GuardEvent(EntityLivingBase blockerIn, boolean isJGIn, boolean isGuardIn, DamageSource sourceIn, float amountIn)
     {
         blocker = blockerIn;
         isJG = isJGIn;
+        isGuard = isGuardIn;
         source = sourceIn;
         amount = amountIn;
     }

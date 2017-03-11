@@ -1,11 +1,11 @@
 #盾強化
 
-##■DL (M1102_F2185_v7)<br>
-https://www.dropbox.com/s/gsyirg3wfkx1i8t/shield_M1102_F2185_v7.jar?dl=0<br>
+##■DL (M1112_F2228_v1)<br>
+https://www.dropbox.com/s/27pvhmqsaemgirz/shield_M1112_F2228_v1.jar?dl=0<br>
 
 ##■動作環境<br>
-Minecraft 1.10.2<br>
-Forge 2185<br>
+Minecraft 1.11.2<br>
+Forge 2228<br>
 
 ##■はじめに<br>
 * バニラの盾の性能を変更するModです。
@@ -41,8 +41,6 @@ Forge 2185<br>
 　　　　　　　　　　耐久値を2消費する。<br>
 <br>
 ##■その他<br>
-ガード成功時、ダメージ100%カット<br>
-
 スケさんの弓をガードした場合、一瞬加速しますが、現状仕様となっています。<br>
 
 バッシュによる行動不能状態は、AI処理へ働きかけている為、<br>

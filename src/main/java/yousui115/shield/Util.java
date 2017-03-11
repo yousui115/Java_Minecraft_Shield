@@ -53,7 +53,8 @@ public class Util
         //■現在使ってるアイテムを取得
         ItemStack activeStack = living.getActiveItemStack();
 
-        if (activeStack != null && living.isHandActive())
+//        if (activeStack != null && living.isHandActive())
+        if (!Util.isEmptyStack(activeStack) && living.isHandActive())
         {
             //■アイテムを持っていて、使用中である。
             Item activeItem = activeStack.getItem();
@@ -147,11 +148,11 @@ public class Util
     {
         if (damage >= 3.0F && living.getActiveItemStack().getItem() == Items.SHIELD)
         {
-            int i = 1 + MathHelper.floor_float(damage);
+            int i = 1 + MathHelper.floor(damage);
             living.getActiveItemStack().damageItem(i, living);
 
 
-            if (living.getActiveItemStack().stackSize <= 0)
+            if (living.getActiveItemStack().getCount() <= 0)
             {
                 EnumHand enumhand = living.getActiveHand();
 
@@ -170,7 +171,7 @@ public class Util
                 }
 
                 living.resetActiveHand();
-                living.playSound(SoundEvents.ITEM_SHIELD_BREAK, 0.8F, 0.8F + living.worldObj.rand.nextFloat() * 0.4F);
+                living.playSound(SoundEvents.ITEM_SHIELD_BREAK, 0.8F, 0.8F + living.getEntityWorld().rand.nextFloat() * 0.4F);
             }
         }
     }
@@ -219,7 +220,7 @@ public class Util
         //■プレイヤー視線(レンジ)
         Vec3d posLivRange = posLivEye.addVector(vecLivLook.xCoord * range, vecLivLook.yCoord * range, vecLivLook.zCoord * range);
         //■草とかに攻撃が吸われないように。
-        return living.worldObj.rayTraceBlocks(posLivEye, posLivRange, false, true, true);
+        return living.getEntityWorld().rayTraceBlocks(posLivEye, posLivRange, false, true, true);
     }
 
     /**
@@ -255,4 +256,7 @@ public class Util
     {
         return event.isCancelable() ? event.isCanceled() : false;
     }
+
+    public static boolean isEmptyStack(ItemStack stackIn) { return stackIn == null || stackIn == ItemStack.EMPTY; }
+
 }
