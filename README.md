@@ -1,7 +1,7 @@
 #盾強化
 
-##■DL (M1112_F2228_v1)<br>
-https://www.dropbox.com/s/27pvhmqsaemgirz/shield_M1112_F2228_v1.jar?dl=0<br>
+##■DL (M1112_F2228_v2)<br>
+https://www.dropbox.com/s/euqv88vwacj97j2/shield_M1112_F2228_v2.jar?dl=0<br>
 
 ##■動作環境<br>
 Minecraft 1.11.2<br>
