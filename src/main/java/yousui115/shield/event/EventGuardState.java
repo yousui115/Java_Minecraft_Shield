@@ -16,7 +16,6 @@ import net.minecraft.world.Explosion;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import yousui115.shield.Util;
 
@@ -27,7 +26,7 @@ public class EventGuardState
      * ■ガード時 に行う処理
      * @param event
      */
-    @SubscribeEvent(priority = EventPriority.LOW)
+    @SubscribeEvent
     public void doGuard(LivingAttackEvent event)
     {
         //■ダメージ処理がスキップされるようなので、何もしない。
@@ -47,16 +46,14 @@ public class EventGuardState
 
         boolean isJG = Util.isJustGuard(blocker);
         float amount = event.getAmount();
-        boolean isGuard = Util.canBlockDamageSource(source, blocker, null);
 
         //■イベント
-        GuardEvent guardEvent = ShieldHooks.onGuard(blocker, isJG, isGuard, source, amount);
+        GuardEvent guardEvent = ShieldHooks.onGuard(blocker, isJG, source, amount);
 
         isJG = guardEvent.isJG;
         source = guardEvent.source;
         amount = guardEvent.amount;
 
-        if (amount <= 0) { event.setCanceled(true); return; }
 
         //■ガード可能か否か(ガード不可攻撃、ガード状態、ガード方向の判定）
         if (!Util.canBlockDamageSource(source, blocker, null)) { return; }

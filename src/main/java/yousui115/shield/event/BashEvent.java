@@ -8,7 +8,7 @@ public class BashEvent extends Event
 {
     public final EntityLivingBase basher;
     public final Entity victim;
-    public int power;
+    public final int power;
     public int amount;
 
     public BashEvent(EntityLivingBase basherIn, Entity victimIn, int powerIn, int amountIn)

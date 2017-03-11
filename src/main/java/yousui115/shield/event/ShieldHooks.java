@@ -14,9 +14,9 @@ public class ShieldHooks
         return event;
     }
 
-    public static GuardEvent onGuard(EntityLivingBase blockerIn, boolean isJGIn, boolean isGuardIn, DamageSource sourceIn, float amountIn)
+    public static GuardEvent onGuard(EntityLivingBase blockerIn, boolean isJGIn, DamageSource sourceIn, float amountIn)
     {
-        GuardEvent event = new GuardEvent(blockerIn, isJGIn, isGuardIn, sourceIn, amountIn);
+        GuardEvent event = new GuardEvent(blockerIn, isJGIn, sourceIn, amountIn);
         MinecraftForge.EVENT_BUS.post(event);
         return event;
     }

@@ -40,7 +40,6 @@ public class MsgBashHdl implements IMessageHandler<MsgBash, IMessage>
             {
                 //■パラメータの書き換え
                 amount = event.amount;
-                power  = event.power;
 
                 //■メインターゲットをノックバック＋ダメージ(バッシュ強度依存)
                 target.knockBack(player, 0.5F * (float)power, player.posX - target.posX, player.posZ - target.posZ);
