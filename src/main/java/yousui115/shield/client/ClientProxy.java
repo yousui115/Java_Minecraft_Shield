@@ -104,5 +104,5 @@ public class ClientProxy extends CommonProxy
 
     @Nullable
     @Override
-    public EntityPlayer getThePlayer() { return ((Minecraft)Minecraft.getMinecraft()).thePlayer; }
+    public EntityPlayer getThePlayer() { return ((Minecraft)Minecraft.getMinecraft()).player; }
 }
