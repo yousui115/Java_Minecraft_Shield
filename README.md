@@ -1,11 +1,11 @@
 #盾
 
-##■DL (M1110_F2189_v3)<br>
-https://www.dropbox.com/s/e8grp27z9s5wtgw/shield_M1110_F2189_v3.jar?dl=0<br>
+##■DL (M1122_F2555_v1)<br>
+https://www.dropbox.com/s/j0la13ki3ie7252/shield_M1122_F2555_v1.jar?dl=0<br>
 
 ##■動作環境<br>
-Minecraft 1.11.0<br>
-Forge 2189<br>
+Minecraft 1.12.2<br>
+Forge 2555<br>
 
 ##■はじめに<br>
 * バニラの盾の性能を変更するModです。
