@@ -10,6 +10,14 @@ import yousui115.shield.event.EventGuardState;
 
 public class CommonProxy
 {
+    public void stackInputShout() {}
+    public boolean isKeyUpShout() { return false; }
+    public boolean isKeyPushShout() { return false; }
+    public void resetStackShout() {}
+
+
+
+
     /**
      * ■1tickに1度しか呼んではいけない。
      * @param isPush
@@ -32,6 +40,8 @@ public class CommonProxy
     public int getNumAttackLength() { return 0; }
 
     /* ================================ register ================================ */
+    public void registerKeyBinding(){}
+
     public void registerEvent()
     {
         MinecraftForge.EVENT_BUS.register(new EventGuardMove());

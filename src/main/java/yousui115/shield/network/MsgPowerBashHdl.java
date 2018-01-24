@@ -77,8 +77,6 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
         List<Entity> entities = attacker.getEntityWorld().getEntitiesInAABBexcluding(
                                     attacker,
                                     attacker.getEntityBoundingBox().grow(rangeAttacker),
-//                                    attacker.getEntityBoundingBox().expandXyz(rangeAttacker),
-//                                    Predicates.and(EntitySelectors.NOT_SPECTATING,
                                     new Predicate<Entity>()
                                     {
                                         public boolean apply(@Nullable Entity target)

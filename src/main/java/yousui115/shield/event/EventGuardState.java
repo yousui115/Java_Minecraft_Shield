@@ -69,7 +69,6 @@ public class EventGuardState
 
             //■ジャストガード時の処理
             if (source.getImmediateSource() instanceof EntityLivingBase)
-//              if (source.getSourceOfDamage() instanceof EntityLivingBase)
             {
                 //■アタッカーにノックバック
                 EntityLivingBase attacker = (EntityLivingBase)source.getImmediateSource();

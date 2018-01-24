@@ -12,7 +12,7 @@ public class Shield
 {
     public static final String MOD_ID = "shield";
     public static final String MOD_DOMAIN = "yousui115." + MOD_ID;
-    public static final String VERSION = "M1122_F2555_v1";
+    public static final String VERSION = "M1122_F2555_v2";
 
     //■インスタント
     @Mod.Instance(MOD_ID)
@@ -40,6 +40,8 @@ public class Shield
     @EventHandler
     public void init(FMLInitializationEvent event)
     {
+        proxy.registerKeyBinding();
+
         proxy.registerEvent();
     }
 

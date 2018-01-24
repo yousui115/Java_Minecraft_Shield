@@ -21,6 +21,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.eventhandler.Event;
+import yousui115.shield.ai.EntityAIAnger;
 import yousui115.shield.ai.EntityAIDonMov;
 
 //TODO 継ぎ接ぎだらけなので、余力があったらリファクタリングしましょう。
@@ -116,15 +117,27 @@ public class Util
     {
         if (!damageSourceIn.isUnblockable() && Util.isGuard(blocker))
         {
-            Vec3d posDamageSource = damageSourceIn.getDamageLocation();
+            //■ダメージ発生源（位置）
+            Vec3d posDS = damageSourceIn.getDamageLocation();
 
-            //TNTの爆発をガード可能にする処理
-            if (posExplosion != null) { posDamageSource = posExplosion; }
+            //■TNTの爆発をガード可能にする処理
+            if (posExplosion != null) { posDS = posExplosion; }
 
-            if (posDamageSource != null)
+            //■ダメージ発生源が存在するなら、ガード判定へ洒落込む
+            if (posDS != null)
             {
+                //■ブロッカーの視線（ベクトル）
                 Vec3d blockerLook = blocker.getLook(1.0F);
-                Vec3d attackerLook = posDamageSource.subtractReverse(blocker.getPositionVector()).normalize();
+                //■アタッカーの視線
+                Vec3d attackerLook = null;
+                if (damageSourceIn.getTrueSource() instanceof EntityLiving)
+                {
+                    attackerLook = damageSourceIn.getTrueSource().getLookVec();
+                }
+                else
+                {
+                    attackerLook = posDS.subtractReverse(blocker.getPositionVector()).normalize();
+                }
                 attackerLook = new Vec3d(attackerLook.x, 0.0D, attackerLook.z);
 
                 //内積を使って、ガード範囲(180度)内か否かの算出を行う。
@@ -201,6 +214,33 @@ public class Util
             EntityAIDonMov ai = new EntityAIDonMov(target);
             ai.tick = tick;
             target.tasks.addTask(0, ai);
+        }
+    }
+
+    /**
+     * ■やんやん？
+     * @param target
+     * @param power
+     */
+    public static void tameAIAnger(EntityLiving anger, EntityLivingBase target)
+    {
+        boolean isLearning = false;
+
+        for (EntityAITasks.EntityAITaskEntry entry : anger.tasks.taskEntries)
+        {
+            if (entry.action instanceof EntityAIAnger)
+            {
+                EntityAIAnger ai = (EntityAIAnger)entry.action;
+                ai.setTarget(target);
+                isLearning = true;
+                break;
+            }
+        }
+        if (!isLearning)
+        {
+            EntityAIAnger ai = new EntityAIAnger(anger, target);
+            ai.setTarget(target);
+            anger.tasks.addTask(0, ai);
         }
     }
 
