@@ -12,7 +12,7 @@ public class Shield
 {
     public static final String MOD_ID = "shield";
     public static final String MOD_DOMAIN = "yousui115." + MOD_ID;
-    public static final String VERSION = "M1122_F2555_v2";
+    public static final String VERSION = "M1122_F2555_v3";
 
     //■インスタント
     @Mod.Instance(MOD_ID)

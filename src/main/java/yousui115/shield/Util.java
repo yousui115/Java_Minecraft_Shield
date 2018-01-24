@@ -115,6 +115,7 @@ public class Util
      */
     public static boolean canBlockDamageSource(DamageSource damageSourceIn, EntityLivingBase blocker, Vec3d posExplosion)
     {
+        //■ガード可能 かつ ガード状態
         if (!damageSourceIn.isUnblockable() && Util.isGuard(blocker))
         {
             //■ダメージ発生源（位置）
@@ -151,6 +152,10 @@ public class Util
         return false;
     }
 
+    public static boolean isUnblockable(DamageSource sourceIn)
+    {
+        return false;
+    }
 
     /**
      * ■シールドのダメージ処理
@@ -159,6 +164,9 @@ public class Util
      */
     public static void damageShield(EntityLivingBase living, float damage)
     {
+        //■サーバのみ
+        if (living.getEntityWorld().isRemote) { return; }
+
         if (damage >= 3.0F && living.getActiveItemStack().getItem() == Items.SHIELD)
         {
             int i = 1 + MathHelper.floor(damage);

@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
 import yousui115.shield.event.EventGuardMove;
+import yousui115.shield.event.EventGuardSplash;
 import yousui115.shield.event.EventGuardState;
 
 public class CommonProxy
@@ -46,6 +47,7 @@ public class CommonProxy
     {
         MinecraftForge.EVENT_BUS.register(new EventGuardMove());
         MinecraftForge.EVENT_BUS.register(new EventGuardState());
+        MinecraftForge.EVENT_BUS.register(new EventGuardSplash());
     }
 
     /* ================================ getter ================================ */
