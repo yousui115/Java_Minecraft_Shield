@@ -184,11 +184,11 @@ public class Util
 
                 if (enumhand == EnumHand.MAIN_HAND)
                 {
-                    living.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, (ItemStack)null);
+                    living.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, ItemStack.EMPTY);
                 }
                 else
                 {
-                    living.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, (ItemStack)null);
+                    living.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, ItemStack.EMPTY);
                 }
 
                 living.resetActiveHand();
