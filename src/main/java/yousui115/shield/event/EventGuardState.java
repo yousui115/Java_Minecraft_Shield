@@ -75,7 +75,7 @@ public class EventGuardState
                 attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
 
                 //■イベント
-                ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount);
+                ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount, false);
             }
 
             //■音
@@ -88,7 +88,11 @@ public class EventGuardState
             //■ガードしたので、呼び出し元の後処理を行わせない。
             event.setCanceled(true);
 
+            //■アタッカー
             EntityLivingBase attacker = null;
+
+            //■盾を無効化出来るか否か
+            boolean canDisableShield = true;
 
             //■ガード時の処理
             if (source.getImmediateSource() instanceof EntityLivingBase)
@@ -97,7 +101,9 @@ public class EventGuardState
                 attacker = (EntityLivingBase)source.getImmediateSource();
 
                 //■イベント
-                ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount);
+                GuardMeleeEvent gmEvent = ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount, canDisableShield);
+
+                canDisableShield = gmEvent.canDisableShield;
             }
 
             //■盾にダメージ
@@ -106,7 +112,6 @@ public class EventGuardState
             //■音
             blocker.getEntityWorld().playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.getEntityWorld().rand.nextFloat() * 0.4F);
 
-            //TODO
             //■Meleeっぽい攻撃時の処理
             if (attacker != null)
             {
@@ -114,7 +119,9 @@ public class EventGuardState
                 attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
 
                 //■盾の一時無効化
-                if (blocker instanceof EntityPlayer && source.isProjectile() == false)
+                if (canDisableShield == true &&         //盾を無効化できる
+                    blocker instanceof EntityPlayer &&  //プレイヤーである
+                    source.isProjectile() == false)     //接近攻撃である(?)
                 {
                     if (attacker.getHeldItemMainhand().getItem().canDisableShield(attacker.getHeldItemMainhand(), blocker.getActiveItemStack(), blocker, attacker))
                     {

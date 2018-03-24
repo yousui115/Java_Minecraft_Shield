@@ -8,16 +8,18 @@ public class GuardMeleeEvent extends Event
 {
     public final EntityLivingBase blocker;
     public final EntityLivingBase attacker;
-    public final boolean isJG;
+    public boolean isJG;
     public final DamageSource source;
-    public final float amount;
+    public float amount;
+    public boolean canDisableShield;
 
-    public GuardMeleeEvent(EntityLivingBase blockerIn, EntityLivingBase attackerIn, boolean isJGIn, DamageSource sourceIn, float amountIn)
+    public GuardMeleeEvent(EntityLivingBase blockerIn, EntityLivingBase attackerIn, boolean isJGIn, DamageSource sourceIn, float amountIn, boolean canDisableShieldIn)
     {
         blocker = blockerIn;
         attacker = attackerIn;
         isJG = isJGIn;
         source = sourceIn;
         amount = amountIn;
+        canDisableShield = canDisableShieldIn;
     }
 }

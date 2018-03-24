@@ -21,9 +21,10 @@ public class ShieldHooks
         return event;
     }
 
-    public static void onGuardMelee(EntityLivingBase blockerIn, EntityLivingBase attackerIn, boolean isJGIn, DamageSource sourceIn, float amountIn)
+    public static GuardMeleeEvent onGuardMelee(EntityLivingBase blockerIn, EntityLivingBase attackerIn, boolean isJGIn, DamageSource sourceIn, float amountIn, boolean canDisableShieldIn)
     {
-        GuardMeleeEvent event = new GuardMeleeEvent(blockerIn, attackerIn, isJGIn, sourceIn, amountIn);
+        GuardMeleeEvent event = new GuardMeleeEvent(blockerIn, attackerIn, isJGIn, sourceIn, amountIn, canDisableShieldIn);
         MinecraftForge.EVENT_BUS.post(event);
+        return event;
     }
 }
