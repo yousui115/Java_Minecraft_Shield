@@ -88,12 +88,13 @@ public class EventGuardState
             //■ガードしたので、呼び出し元の後処理を行わせない。
             event.setCanceled(true);
 
+            EntityLivingBase attacker = null;
+
             //■ガード時の処理
             if (source.getImmediateSource() instanceof EntityLivingBase)
             {
                 //■アタッカーにノックバック
-                EntityLivingBase attacker = (EntityLivingBase)source.getImmediateSource();
-                attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
+                attacker = (EntityLivingBase)source.getImmediateSource();
 
                 //■イベント
                 ShieldHooks.onGuardMelee(blocker, attacker, isJG, source, amount);
@@ -104,6 +105,23 @@ public class EventGuardState
 
             //■音
             blocker.getEntityWorld().playSound(null, blocker.posX, blocker.posY, blocker.posZ, SoundEvents.ITEM_SHIELD_BLOCK, SoundCategory.HOSTILE, 1.0F, 0.8F + blocker.getEntityWorld().rand.nextFloat() * 0.4F);
+
+            //TODO
+            //■Meleeっぽい攻撃時の処理
+            if (attacker != null)
+            {
+                //■アタッカーにノックバック
+                attacker.knockBack(blocker, 0.5F, blocker.posX - attacker.posX, blocker.posZ - attacker.posZ);
+
+                //■盾の一時無効化
+                if (blocker instanceof EntityPlayer && source.isProjectile() == false)
+                {
+                    if (attacker.getHeldItemMainhand().getItem().canDisableShield(attacker.getHeldItemMainhand(), blocker.getActiveItemStack(), blocker, attacker))
+                    {
+                        ((EntityPlayer)blocker).disableShield(true);
+                    }
+                }
+            }
         }
     }
 

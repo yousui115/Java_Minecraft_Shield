@@ -9,7 +9,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumAction;
@@ -130,15 +129,9 @@ public class Util
                 //■ブロッカーの視線（ベクトル）
                 Vec3d blockerLook = blocker.getLook(1.0F);
                 //■アタッカーの視線
-                Vec3d attackerLook = null;
-                if (damageSourceIn.getTrueSource() instanceof EntityLiving)
-                {
-                    attackerLook = damageSourceIn.getTrueSource().getLookVec();
-                }
-                else
-                {
-                    attackerLook = posDS.subtractReverse(blocker.getPositionVector()).normalize();
-                }
+                Vec3d attackerLook = posDS.subtractReverse(blocker.getPositionVector()).normalize();
+
+                //■まずは普通のガード判定を試みる。
                 attackerLook = new Vec3d(attackerLook.x, 0.0D, attackerLook.z);
 
                 //内積を使って、ガード範囲(180度)内か否かの算出を行う。
@@ -146,14 +139,25 @@ public class Util
                 {
                     return true;
                 }
+                else
+                {
+                    //■黄昏のナーガのような、プレイヤーを突き抜けながら
+                    //  ダメージを発生させるDSへの対処
+                    if (!(damageSourceIn.getTrueSource() instanceof EntityLivingBase)) { return false; }
+
+                    attackerLook = new Vec3d(damageSourceIn.getTrueSource().getLookVec().x,
+                                             0.0D,
+                                             damageSourceIn.getTrueSource().getLookVec().z);
+
+                    //内積を使って、ガード範囲(180度)内か否かの算出を行う。
+                    if (attackerLook.dotProduct(blockerLook) < 0.0D)
+                    {
+                        return true;
+                    }
+                }
             }
         }
 
-        return false;
-    }
-
-    public static boolean isUnblockable(DamageSource sourceIn)
-    {
         return false;
     }
 
@@ -167,19 +171,19 @@ public class Util
         //■サーバのみ
         if (living.getEntityWorld().isRemote) { return; }
 
-        if (damage >= 3.0F && living.getActiveItemStack().getItem() == Items.SHIELD)
+        if (damage >= 3.0F && living.getActiveItemStack().getItem().isShield(living.getActiveItemStack(), living))
         {
+            ItemStack copyBeforeUse = living.getActiveItemStack().copy();
             int i = 1 + MathHelper.floor(damage);
             living.getActiveItemStack().damageItem(i, living);
 
-
-            if (living.getActiveItemStack().getCount() <= 0)
+            if (living.getActiveItemStack().isEmpty())
             {
                 EnumHand enumhand = living.getActiveHand();
 
                 if (living instanceof EntityPlayer)
                 {
-                    net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem((EntityPlayer)living, living.getActiveItemStack(), enumhand);
+                    net.minecraftforge.event.ForgeEventFactory.onPlayerDestroyItem((EntityPlayer)living, copyBeforeUse, enumhand);
                 }
 
                 if (enumhand == EnumHand.MAIN_HAND)
@@ -192,7 +196,7 @@ public class Util
                 }
 
                 living.resetActiveHand();
-                living.playSound(SoundEvents.ITEM_SHIELD_BREAK, 0.8F, 0.8F + living.getEntityWorld().rand.nextFloat() * 0.4F);
+                living.playSound(SoundEvents.ITEM_SHIELD_BREAK, 0.8F, 0.8F + living.world.rand.nextFloat() * 0.4F);
             }
         }
     }
