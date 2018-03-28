@@ -8,7 +8,9 @@ import com.google.common.base.Predicate;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.passive.EntityTameable;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.EntityGolem;
+import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -35,19 +37,22 @@ public class MsgShoutHdl implements IMessageHandler<MsgShout, IMessage>
                                     {
                                         public boolean apply(@Nullable Entity target)
                                         {
-                                            if (target instanceof EntityLiving)
-                                            {
-                                                if (target instanceof EntityTameable)
-                                                {
-                                                    return false;
-                                                }
+                                            //■タゲ
+                                            boolean tage = false;
 
-                                                return true;
-                                            }
-                                            else
+                                            //■敵MOBのタゲは必ず取る。
+                                            if (target instanceof IMob) { tage = true; }
+                                            //■ゴーレムは、「標的：敵MOB以外」の時にタゲが取れる。
+                                            else if (target instanceof EntityGolem)
                                             {
-                                                return false;
+                                                EntityLivingBase enemy = ((EntityGolem) target).getAttackTarget();
+                                                if (enemy != null && !(enemy instanceof IMob))
+                                                {
+                                                    tage = true;
+                                                }
                                             }
+
+                                            return tage;
                                         }
                                     });
 
