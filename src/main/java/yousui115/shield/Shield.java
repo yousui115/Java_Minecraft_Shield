@@ -1,5 +1,7 @@
 package yousui115.shield;
 
+import org.apache.logging.log4j.Logger;
+
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -12,7 +14,9 @@ public class Shield
 {
     public static final String MOD_ID = "shield";
     public static final String MOD_DOMAIN = "yousui115." + MOD_ID;
-    public static final String VERSION = "M1122_F2555_v7";
+    public static final String VERSION = "M1122_F2555_v8";
+
+    public static Logger log;
 
     //■インスタント
     @Mod.Instance(MOD_ID)
@@ -29,6 +33,8 @@ public class Shield
     @EventHandler
     public void preinit(FMLPreInitializationEvent event)
     {
+        log = event.getModLog();
+
         //■パケットの登録
         PacketHandler.register();
     }

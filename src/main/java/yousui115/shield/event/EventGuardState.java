@@ -85,6 +85,9 @@ public class EventGuardState
         //▼ノーマルガード。
         else
         {
+            //■プレイヤー以外は、従来の処理を走らせる。
+            if (!(blocker instanceof EntityPlayer)) { return; }
+
             //■ガードしたので、呼び出し元の後処理を行わせない。
             event.setCanceled(true);
 
@@ -97,7 +100,6 @@ public class EventGuardState
             //■ガード時の処理
             if (source.getImmediateSource() instanceof EntityLivingBase)
             {
-                //■アタッカーにノックバック
                 attacker = (EntityLivingBase)source.getImmediateSource();
 
                 //■イベント
