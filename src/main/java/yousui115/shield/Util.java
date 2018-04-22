@@ -12,14 +12,19 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.EnumAction;
+import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.tileentity.BannerPattern;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.eventhandler.Event;
+import scala.util.Random;
 import yousui115.shield.ai.EntityAIAnger;
 import yousui115.shield.ai.EntityAIDonMov;
 
@@ -34,6 +39,8 @@ public class Util
     //■「被バッシュ後の移動不可」パラメータ
     public static final UUID UUID_donmov  = UUID.fromString("6fd1ce57-8e37-504d-f859-6262b644ef19");
     public static final AttributeModifier modifierDonmove = (new AttributeModifier(UUID_donmov, "donmov", -1.0d, 2)).setSaved(false);
+
+    public static final Random rand = new Random();
 
     //■「ガード時スプリント」パラメータ
 //    public static final UUID UUID_guardSprintSpeed  = UUID.fromString("9be6f9f0-c286-5fb1-974e-baec48888888");
@@ -174,6 +181,13 @@ public class Util
         if (damage >= 3.0F && living.getActiveItemStack().getItem().isShield(living.getActiveItemStack(), living))
         {
             ItemStack copyBeforeUse = living.getActiveItemStack().copy();
+
+            //■オリジナルねーむ が付いていれば、1/10の確率でダメージかっと
+            if (copyBeforeUse.hasDisplayName() == true && living.getEntityWorld().rand.nextInt(10) == 1)
+            {
+                return;
+            }
+
             int i = 1 + MathHelper.floor(damage);
             living.getActiveItemStack().damageItem(i, living);
 
@@ -302,6 +316,45 @@ public class Util
         float f2 = -MathHelper.cos(-pitch * 0.017453292F);
         float f3 = MathHelper.sin(-pitch * 0.017453292F);
         return new Vec3d((double)(f1 * f2), (double)f3, (double)(f * f2));
+    }
+
+    /**
+     * ■ItemBanner.appendHoverTextFromTileEntityTag を丸パｋ参考にした
+     * @param stack
+     * @param p_185054_1_
+     */
+    public static boolean hasPattern(ItemStack stack, BannerPattern patternIn)
+    {
+        //■ブロック情報
+        NBTTagCompound nbttagcompound = stack.getSubCompound("BlockEntityTag");
+
+        //■無地の盾じゃない！
+        if (nbttagcompound != null && nbttagcompound.hasKey("Patterns"))
+        {
+            //■どんな模様かな？
+            NBTTagList nbttaglist = nbttagcompound.getTagList("Patterns", 10);
+
+            for (int i = 0; i < nbttaglist.tagCount() && i < 6; ++i)
+            {
+                //■リストの先頭から覗いてみよう。
+                NBTTagCompound nbttagcompound1 = nbttaglist.getCompoundTagAt(i);
+
+                //■色は？
+                EnumDyeColor enumdyecolor = EnumDyeColor.byDyeDamage(nbttagcompound1.getInteger("Color"));
+
+                //■柄は？
+                BannerPattern bannerpattern = BannerPattern.byHash(nbttagcompound1.getString("Pattern"));
+
+                //■
+                if (bannerpattern == patternIn)
+                {
+                    return true;
+//                    p_185054_1_.add(I18n.translateToLocal("item.banner." + bannerpattern.getFileName() + "." + enumdyecolor.getUnlocalizedName()));
+                }
+            }
+        }
+
+        return false;
     }
 
     public static boolean isEventCanceled(Event event)

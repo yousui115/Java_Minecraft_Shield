@@ -45,13 +45,17 @@ public class MsgBashHdl implements IMessageHandler<MsgBash, IMessage>
 
                 //■メインターゲットをノックバック＋ダメージ(バッシュ強度依存)
                 target.knockBack(player, 0.5F * (float)power, player.posX - target.posX, player.posZ - target.posZ);
-                target.attackEntityFrom(DamageSource.causePlayerDamage(player), msg.getAmount());
+                boolean isSuccess = target.attackEntityFrom(DamageSource.causePlayerDamage(player), msg.getAmount());
 
-                //■ドンムブ
-                Util.tameAIDonmov(target, power);
+                //■ダメージが通った
+                if (isSuccess == true)
+                {
+                    //■ドンムブ
+                    Util.tameAIDonmov(target, power);
 
-                //■バッシュ打撃音
-                player.getEntityWorld().playSound((EntityPlayer)null, player.posX, player.posY, player.posZ, SoundEvents.ITEM_SHIELD_BLOCK, player.getSoundCategory(), 1.0F, 1.0F);
+                    //■バッシュ打撃音
+                    player.getEntityWorld().playSound((EntityPlayer)null, player.posX, player.posY, player.posZ, SoundEvents.ITEM_SHIELD_BLOCK, player.getSoundCategory(), 1.0F, 1.0F);
+                }
 
                 //■耐久値減少(バッシュ:1 パワーバッシュ:2)
                 ItemStack active = player.getActiveItemStack();

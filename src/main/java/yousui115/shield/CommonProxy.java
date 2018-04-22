@@ -8,6 +8,7 @@ import net.minecraftforge.common.MinecraftForge;
 import yousui115.shield.event.EventGuardMove;
 import yousui115.shield.event.EventGuardSplash;
 import yousui115.shield.event.EventGuardState;
+import yousui115.shield.event.EventShieldState;
 
 public class CommonProxy
 {
@@ -48,6 +49,7 @@ public class CommonProxy
         MinecraftForge.EVENT_BUS.register(new EventGuardMove());
         MinecraftForge.EVENT_BUS.register(new EventGuardState());
         MinecraftForge.EVENT_BUS.register(new EventGuardSplash());
+        MinecraftForge.EVENT_BUS.register(new EventShieldState());
     }
 
     /* ================================ getter ================================ */

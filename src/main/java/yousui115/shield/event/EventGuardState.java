@@ -56,6 +56,7 @@ public class EventGuardState
         source = guardEvent.source;
         amount = guardEvent.amount;
 
+        //■ここでダメージが0なら、以降の処理はスキップ
         if (amount <= 0) { event.setCanceled(true); return; }
 
         //■ガード可能か否か(ガード不可攻撃、ガード状態、ガード方向の判定）

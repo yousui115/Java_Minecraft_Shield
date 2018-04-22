@@ -163,18 +163,21 @@ public class MsgPowerBashHdl implements IMessageHandler<MsgPowerBash, IMessage>
                     //■一体にでも攻撃が当たればSEが鳴る
                     isSound = true;
 
+                    //■ダメージが通ったか否か
+                    boolean isSuccess = false;
+
                     //■ダメージソースとダメージの設定
                     if (attacker instanceof EntityPlayer)
                     {
-                        victim.attackEntityFrom(DamageSource.causePlayerDamage((EntityPlayer)attacker), amountIn);
+                        isSuccess = victim.attackEntityFrom(DamageSource.causePlayerDamage((EntityPlayer)attacker), amountIn);
                     }
                     else
                     {
-                        victim.attackEntityFrom(DamageSource.causeMobDamage(attacker), amountIn);
+                        isSuccess = victim.attackEntityFrom(DamageSource.causeMobDamage(attacker), amountIn);
                     }
 
                     //■ノックバックの設定
-                    if (victim instanceof EntityLivingBase)
+                    if (isSuccess == true && victim instanceof EntityLivingBase)
                     {
                         ((EntityLiving)victim).knockBack(attacker, 0.4f,
                                 (double)MathHelper.sin(attacker.rotationYaw * 0.017453292F),
