@@ -252,7 +252,7 @@ public class Util
     {
         boolean isLearning = false;
 
-        for (EntityAITasks.EntityAITaskEntry entry : anger.tasks.taskEntries)
+        for (EntityAITasks.EntityAITaskEntry entry : anger.targetTasks.taskEntries)
         {
             if (entry.action instanceof EntityAIAnger)
             {
@@ -266,7 +266,7 @@ public class Util
         {
             EntityAIAnger ai = new EntityAIAnger(anger, target);
             ai.setTarget(target);
-            anger.tasks.addTask(0, ai);
+            anger.targetTasks.addTask(0, ai);
         }
     }
 

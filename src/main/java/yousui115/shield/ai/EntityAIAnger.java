@@ -17,7 +17,7 @@ public class EntityAIAnger extends EntityAIBase
     {
         myself = myselfIn;
         target = targetIn;
-        setMutexBits(0x0);
+        setMutexBits(1);
     }
 
     @Override

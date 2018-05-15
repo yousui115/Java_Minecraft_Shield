@@ -8,11 +8,13 @@ import com.google.common.base.Predicate;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.monster.EntityGolem;
+import net.minecraft.entity.ai.EntityAIFindEntityNearestPlayer;
+import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
+import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -30,6 +32,7 @@ public class MsgShoutHdl implements IMessageHandler<MsgShout, IMessage>
         //■サーバのプレイヤー
         EntityPlayer player = ctx.getServerHandler().player;
 
+//        player.world.getEntitiesWithinAABB(EntityLiving.class, aabb, filter)   //コッチの方がいいかもー
         List<Entity> entities = player.getEntityWorld().getEntitiesInAABBexcluding(
                                     player,
                                     player.getEntityBoundingBox().grow(10d),
@@ -40,17 +43,43 @@ public class MsgShoutHdl implements IMessageHandler<MsgShout, IMessage>
                                             //■タゲ
                                             boolean tage = false;
 
-                                            //■敵MOBのタゲは必ず取る。
-                                            if (target instanceof IMob) { tage = true; }
-                                            //■ゴーレムは、「標的：敵MOB以外」の時にタゲが取れる。
-                                            else if (target instanceof EntityGolem)
+                                            //■M・O・B
+                                            if (target instanceof EntityLiving && target instanceof IMob)
                                             {
-                                                EntityLivingBase enemy = ((EntityGolem) target).getAttackTarget();
-                                                if (enemy != null && !(enemy instanceof IMob))
+                                                EntityLiving mob = (EntityLiving)target;
+                                                for(EntityAITasks.EntityAITaskEntry entry : mob.targetTasks.taskEntries)
                                                 {
-                                                    tage = true;
+                                                    //■「近くのプレイヤー」を狙う奴は敵だ
+//                                                  if (entry.action.getClass() == EntityAINearestAttackableTarget.class)
+                                                    if (entry.action instanceof EntityAINearestAttackableTarget)
+                                                    {
+                                                        Class clazz = (Class)ObfuscationReflectionHelper.getPrivateValue(EntityAINearestAttackableTarget.class,
+                                                                                                                         (EntityAINearestAttackableTarget)entry.action, 0);
+
+                                                        if (clazz == EntityPlayer.class)
+                                                        {
+                                                            tage = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    else if (entry.action instanceof EntityAIFindEntityNearestPlayer)
+                                                    {
+                                                        tage = true;
+                                                        break;
+                                                    }
                                                 }
                                             }
+//                                            //■敵MOBのタゲは必ず取る。
+//                                            if (target instanceof IMob) { tage = true; }
+//                                            //■ゴーレムは、「標的：敵MOB以外」の時にタゲが取れる。
+//                                            else if (target instanceof EntityGolem)
+//                                            {
+//                                                EntityLivingBase enemy = ((EntityGolem) target).getAttackTarget();
+//                                                if (enemy != null && !(enemy instanceof IMob))
+//                                                {
+//                                                    tage = true;
+//                                                }
+//                                            }
 
                                             return tage;
                                         }

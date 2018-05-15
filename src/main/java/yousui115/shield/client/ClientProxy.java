@@ -24,7 +24,7 @@ import yousui115.shield.client.event.EventShout;
 public class ClientProxy extends CommonProxy
 {
     //■雄たけび
-    private static final KeyBinding changeShieldKey = new KeyBinding("key.shield.shout", Keyboard.KEY_R, "[Shield] Shout");
+    private static final KeyBinding changeShieldKey = new KeyBinding("provocation", Keyboard.KEY_R, "Shield");
     private int inputKeyShout = 0;
 
     /**
